@@ -4,11 +4,13 @@
   "description": "Invoice Management Application",
   "main": "app.js",
   "scripts": {
+    "start": "node app.js",
     "test": "npx cypress open"
   },
   "author": "Michael Schreier",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^5.0.1",
     "express": "^4.16.2",
     "knex": "^0.14.4",
     "morgan": "^1.9.0",
