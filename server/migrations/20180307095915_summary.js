@@ -1,6 +1,7 @@
 
 exports.up = function(knex, Promise) {
     return knex.schema.createTable("summary", table => {
+        table.increments("id").primary();
         table.integer("month");
         table.integer("year");
         table.float("gross_revenue", 8, 2);
