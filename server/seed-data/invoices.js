@@ -1,7 +1,7 @@
 let data = [
   {
     id: 1001,
-    name: "Smith",
+    name: "smith",
     issued: "2018-02-01",
     paid: "2018-02-09",
     amount_due: 40,
@@ -9,7 +9,7 @@ let data = [
   },
   {
     id: 1002,
-    name: "Galvanize Opera Theatre",
+    name: "galvanize opera theatre",
     issued: "2018-01-15",
     // paid: "",
     amount_due: 1000,
@@ -17,7 +17,7 @@ let data = [
   },
   {
     id: 1003,
-    name: "Johnson",
+    name: "johnson",
     issued: "2018-03-01",
     // paid: "",
     amount_due: 120,
@@ -25,7 +25,7 @@ let data = [
   },
   {
     id: 1004,
-    name: "Doe",
+    name: "doe",
     issued: "2018-02-22",
     paid: "2018-02-22",
     amount_due: 100,
@@ -33,7 +33,7 @@ let data = [
   },
   {
     id: 1005,
-    name: "Galvanize Lounge",
+    name: "galvanize lounge",
     issued: "2018-01-31",
     paid: "2018-01-31",
     amount_due: 200,
@@ -41,7 +41,7 @@ let data = [
   },
   {
     id: 1006,
-    name: "Williams",
+    name: "williams",
     issued: "2018-03-01",
     // paid: "",
     amount_due: 120,
@@ -49,7 +49,7 @@ let data = [
   },
   {
     id: 1007,
-    name: "Miller",
+    name: "miller",
     issued: "2018-03-01",
     // paid: "",
     amount_due: 120,
@@ -57,7 +57,7 @@ let data = [
   },
   {
     id: 1008,
-    name: "Wilson",
+    name: "wilson",
     issued: "2018-03-01",
     // paid: "",
     amount_due: 120,
@@ -65,7 +65,7 @@ let data = [
   },
   {
     id: 1009,
-    name: "Galvanize Music School",
+    name: "galvanize music school",
     issued: "2018-03-05",
     // paid: "",
     amount_due: 250,
