@@ -26,6 +26,7 @@ export default {
   color: #2c3e50;
 }
 
+
 body {
   margin: 0;
 }
@@ -63,19 +64,6 @@ a {
 iframe {
   height: 5vw !important;
 }
-
-/* iframe>html>body>div>form {
-  height: 7.14vw !important;
-} */
-
-/* .CardField-input-wrapper, .ElementsApp {
-  height: 7.14vw !important;
-} */
-
-/* .CardField-input-wrapper {
-  display: flex;
-  align-items: center;
-} */
 
 @media (max-height: 500px) {
   nav {

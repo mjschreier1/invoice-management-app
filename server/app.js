@@ -1,10 +1,12 @@
 const express = require("express");
 const queries = require("./queries");
 const stripe = require("stripe")(process.env.STRIPE_SECRET);
+const cors = require("cors");
 
 const port = process.env.PORT || 3000;
 
 const app = express();
+app.use(cors());
 
 app.get("/invoice/:id/:name", (req, res) => {
     queries.readSingleInvoice(req.params.id, req.params.name)
