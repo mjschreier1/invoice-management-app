@@ -11,7 +11,14 @@ app.use(cors());
 app.get("/invoice/:id/:name", (req, res) => {
     queries.readSingleInvoice(req.params.id, req.params.name)
         .then(invoice => res.json(invoice))
-        .catch(() => res.json({message: "Oops, we couldn't match your invoice number and name!"}))
+        .catch(() => {
+            res.status(404);
+            res.json({ 
+                error: {
+                    message: "Oops, we couldn't match your invoice number and name!"
+                }
+            })
+        })
 })
 
 app.post("/charge", (req, res) => {

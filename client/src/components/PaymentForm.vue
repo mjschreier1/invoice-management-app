@@ -3,25 +3,42 @@
     <div class="input-wrapper">
       <div class="label-input">
         <label for="invoice-number">Invoice Number:</label>
-        <input type="number" v-model="invoiceId"/>
+        <input
+          type="number"
+          v-model="invoiceId"
+          :disabled="disableInvoiceLookup"
+          />
       </div>
       <div class="label-input">
         <label for="name">Last Name or Organization Name:<br><small>(as it appears on invoice)</small></label>
-        <input type="text" v-model="name"/>
+        <input
+          type="text"
+          v-model="name"
+          :disabled="disableInvoiceLookup"
+        />
       </div>
     </div>
     <div class="button-wrapper">
-      <button @click.prevent="getInvoice()">Get My Invoice</button>
+      <button
+        @click.prevent="getInvoice()"
+        :disabled="disableInvoiceLookup"
+        :class="{ disabledButton: disableInvoiceLookup }"
+      >Get My Invoice</button>
     </div>
-    <p v-if="apiDataExists">Invoice {{ apiData.id }} has a ${{ apiData.amount_due.toFixed(2) }} balance.</p>
-    <card class='stripe-card'
-      :class='{ complete }'
-      stripe='pk_test_IsDBxjcOKJ1omoSw62IVbyzq'
-      :options='stripeOptions'
-      @change='complete = $event.complete'
+    <p v-if="apiDataExists">Invoice {{ apiData.id }} has a ${{ apiData.balance.toFixed(2) }} balance. {{ apiData.balance === 0 ? "Did you mean to look up a different invoice?" : "" }}</p>
+    <p v-if="errorExists">{{ error }}</p>
+    <card class="stripe-card"
+      :class="{ complete }"
+      stripe="pk_test_IsDBxjcOKJ1omoSw62IVbyzq"
+      :options="stripeOptions"
+      @change="complete = $event.complete"
     />
     <div class="button-wrapper">
-      <button type="submit">Charge Card {{ apiSuccess ? `for $${apiData.amount_due.toFixed(2)}` : "" }}</button>
+      <button
+        type="submit"
+        :disabled="disablePayment"
+        :class="{ disabledButton: disablePayment }"
+      >Charge Card {{ apiSuccess ? `for $${apiData.balance.toFixed(2)}` : "" }}</button>
     </div>
   </form>
 </template>
@@ -55,6 +72,10 @@ export default {
       apiDataExists: false,
       apiSuccess: false,
       apiData: "",
+      disablePayment: true,
+      disableInvoiceLookup: false,
+      errorExists: false,
+      error: "",
     }
   },
 
@@ -63,15 +84,30 @@ export default {
   methods: {
     getInvoice(invoiceId, name) {
       fetch(`http://localhost:3000/invoice/${this.$data.invoiceId}/${this.$data.name}`)
-        .then(res => res.json())
+        .then(res => {
+          if(res.status < 400) {
+            return res.json()
+           } else {
+            return res.json()
+              .then(error => {throw error})
+           }
+        })
         .then(json => {
+          this.$data.errorExists = false;
           this.$data.apiDataExists = true;
           this.$data.apiData = json;
-          if(this.$data.apiData.amount_due) {
+          if(this.$data.apiData.balance) {
             this.$data.apiSuccess = true;
+            this.$data.disableInvoiceLookup = true;
+            this.$data.disablePayment = false;
           }
         })
         .then(() => console.log(this.$data.apiData))
+        .catch(error => {
+          console.log(error)
+          this.$data.error = error.error.message;
+          this.$data.errorExists = true;
+        })
     },
     pay () {
       // createToken returns a Promise which resolves in a result object with
@@ -122,6 +158,11 @@ button:hover {
   color: #eeeeee;
   background-color: #32a973;
   cursor: pointer;
+}
+.disabledButton, .disabledButton:hover {
+  background-color: #cccccc;
+  color: white;
+  cursor: default;
 }
 .button-wrapper {
   width: 70vw;
