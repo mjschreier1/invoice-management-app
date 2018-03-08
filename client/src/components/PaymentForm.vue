@@ -43,6 +43,7 @@
     </div>
     <p v-if="chargeResponse">{{ chargeResponse.message }}</p>
     <p v-if="chargeResponse.message === 'Transaction successful!'">Card charged for ${{ chargeResponse.amount }}.</p>
+    <p v-if="chargeResponse.message === 'Transaction failed.'">Please confirm that your credit card details were entered correctly. Refresh the page to try again. If the problem persists, confirm that your credit card is not expired and has the credit to process the payment. Click the e-mail icon above to reach Adam regarding any problems.</p>
   </form>
 </template>
 
@@ -139,6 +140,9 @@ export default {
         .then(res => res.json())
         .then(json => {
           this.$data.chargeResponse = json;
+        })
+        .catch(error => {
+          this.$data.chargeResponse = error;
         })
     }
   }

@@ -4,7 +4,6 @@
       <h1>Adam A Torres Music, LLC</h1>
       <div id="contact">
         <a href="mailto:utmusic@gmail.com"><icon name="envelope"></icon></a>
-        <!-- <a href="mailto:utmusic@gmail.com"><p>Contact Adam</p></a> -->
       </div>
     </nav>
     <router-view/>
