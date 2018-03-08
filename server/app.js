@@ -6,7 +6,7 @@ const port = process.env.PORT || 3000;
 
 const app = express();
 
-app.post("/invoice/:id/:name", (req, res) => {
+app.get("/invoice/:id/:name", (req, res) => {
     queries.readSingleInvoice(req.params.id, req.params.name)
         .then(invoice => res.json(invoice))
         .catch(() => res.json({message: "Oops, we couldn't match your invoice number and name!"}))
