@@ -1,12 +1,16 @@
+require("dotenv").config();
+
 const express = require("express");
 const queries = require("./queries");
 const stripe = require("stripe")(process.env.STRIPE_SECRET);
 const cors = require("cors");
+const bodyParser = require("body-parser")
 
 const port = process.env.PORT || 3000;
 
 const app = express();
 app.use(cors());
+app.use(bodyParser.json())
 
 app.get("/invoice/:id/:name", (req, res) => {
     queries.readSingleInvoice(req.params.id, req.params.name)
@@ -22,38 +26,36 @@ app.get("/invoice/:id/:name", (req, res) => {
 })
 
 app.post("/charge", (req, res) => {
-    const chargeCard = (chargeObject, maxPayment) => {
+    console.log(req.body);
+    
+    const token = req.body.stripeToken;
+    const chargeCard = (chargeObject) => {
       return new Promise((resolve, reject) => {
-        chargeObject.amount > maxPayment * 100 || chargeObject.amount < 0 
-        ? reject(`Payment amount must be between $0 and $${parseInt(maxPayment).toFixed(2)}`) 
-        : stripe.charges.create(chargeObject, (err, charge) => {
-                err ? reject(err) : resolve(charge);
-            }
-        );
+        stripe.charges.create(chargeObject, (err, charge) => {
+            err ? reject(err) : resolve(charge);
+        });
       });
     };
 
-    const token = req.body.stripeToken;
     chargeCard({ 
         amount: req.body.amount * 100, 
         currency: "usd", 
-        description: "Example charge", 
+        description: "Invoice payment", 
         source: token 
-    }, req.body.maxPayment)
+    })
         .then(transaction => {
+            console.log(transaction);
             queries.updateBalance(transaction)
-        })
-        .then(transaction => {
-            res.send(`
-                <h1>Transaction successful</h1>
-                <p>Card charged for $${(transaction.amount / 100).toFixed(2)}.
-            `)
+                .then(transaction => {
+                    res.status(200);
+                    res.json({
+                        message: "Transaction successful",
+                        amount: req.body.amount
+                    })
+                })
         })
         .catch(error => {
-            res.send(`
-                <h1>Transaction failed</h1>
-                <p>${error}</p>
-            `);
+            res.send(error);
         });
 })
 

@@ -38,6 +38,7 @@
         type="submit"
         :disabled="disablePayment"
         :class="{ disabledButton: disablePayment }"
+        @click.prevent="pay()"
       >Charge Card {{ apiSuccess ? `for $${apiData.balance.toFixed(2)}` : "" }}</button>
     </div>
   </form>
@@ -110,12 +111,32 @@ export default {
         })
     },
     pay () {
+      this.$data.disablePayment = true;
       // createToken returns a Promise which resolves in a result object with
       // either a token or an error key.
       // See https://stripe.com/docs/api#tokens for the token object.
       // See https://stripe.com/docs/api#errors for the error object.
       // More general https://stripe.com/docs/stripe.js#stripe-create-token.
-      createToken().then(data => console.log(data.token))
+      createToken()
+        .then(data => {console.log(data.token.id); return data.token.id})
+        .then(token => {
+          return fetch(`http://localhost:3000/charge`, {
+            method: "POST",
+            body: JSON.stringify({
+              amount: this.$data.apiData.balance.toFixed(2),
+              stripeToken: token,
+              invoiceId: this.$data.invoiceId,
+              name: this.$data.name
+            }),
+            headers: new Headers({
+              "Content-Type": "application/json"
+            })
+          })
+        })
+        .then(res => {console.log(res.json)})
+        // .then(json => {
+        //   console.log(json)
+        // })
     }
   }
 }
@@ -160,7 +181,7 @@ button:hover {
   cursor: pointer;
 }
 .disabledButton, .disabledButton:hover {
-  background-color: #cccccc;
+  background-color: #dddddd;
   color: white;
   cursor: default;
 }

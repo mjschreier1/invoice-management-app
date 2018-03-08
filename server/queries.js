@@ -8,6 +8,10 @@ module.exports = {
     },
 
     updateBalance(transaction) {
-
+        return database("invoices").where("id", transaction.invoiceId)
+            .update({
+                paid: `${new Date().getUTCFullYear}-${new Date().getUTCMonth}-${new Date().getUTCDate}`,
+                balance: 0
+            }, "*")
     },
 }
