@@ -88,7 +88,7 @@ export default {
 
   methods: {
     getInvoice(invoiceId, name) {
-      fetch(`http://localhost:3000/invoice/${this.$data.invoiceId}/${this.$data.name}`)
+      fetch(`https://invoice-management-app.herokuapp.com/invoice/${this.$data.invoiceId}/${this.$data.name}`)
         .then(res => {
           if(res.status < 400) {
             return res.json()
