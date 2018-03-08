@@ -45,17 +45,21 @@ app.post("/charge", (req, res) => {
     })
         .then(transaction => {
             console.log(transaction);
-            queries.updateBalance(transaction)
-                .then(transaction => {
+            queries.processPayment(req.body)
+                .then(star => {
                     res.status(200);
                     res.json({
-                        message: "Transaction successful",
-                        amount: req.body.amount
+                        message: "Transaction successful!",
+                        amount: req.body.amount,
+                        row: star
                     })
                 })
         })
         .catch(error => {
-            res.send(error);
+            res.status(400);
+            res.json({
+                message: "Transaction failed.",
+            })
         });
 })
 

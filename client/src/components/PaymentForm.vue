@@ -41,6 +41,8 @@
         @click.prevent="pay()"
       >Charge Card {{ apiSuccess ? `for $${apiData.balance.toFixed(2)}` : "" }}</button>
     </div>
+    <p v-if="chargeResponse">{{ chargeResponse.message }}</p>
+    <p v-if="chargeResponse.message === 'Transaction successful!'">Card charged for ${{ chargeResponse.amount }}.</p>
   </form>
 </template>
 
@@ -77,6 +79,7 @@ export default {
       disableInvoiceLookup: false,
       errorExists: false,
       error: "",
+      chargeResponse: "",
     }
   },
 
@@ -133,10 +136,10 @@ export default {
             })
           })
         })
-        .then(res => {console.log(res.json)})
-        // .then(json => {
-        //   console.log(json)
-        // })
+        .then(res => res.json())
+        .then(json => {
+          this.$data.chargeResponse = json;
+        })
     }
   }
 }
@@ -211,7 +214,7 @@ button:hover {
 .StripeElement {
   height: 5vw;
 }
-@media (max-width: 500px) {
+@media (max-width: 535px) {
   .stripe-card {
     width: 90vw;
     height: 7.5vw;

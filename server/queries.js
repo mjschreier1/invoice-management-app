@@ -1,4 +1,9 @@
 const database = require("./database-connection");
+let currentDate;
+const setDate = () => {
+    currentDate = `${new Date().getUTCFullYear()}-${new Date().getUTCMonth()}-${new Date().getUTCDate()}`
+}
+
 
 module.exports = {
 
@@ -7,10 +12,12 @@ module.exports = {
           .then(record => new Promise((resolve, reject) => (record.name === name.toLowerCase() ? resolve(record) : reject(record))));
     },
 
-    updateBalance(transaction) {
+    processPayment(transaction) {
+        setDate();
+        console.log(transaction.invoiceId)
         return database("invoices").where("id", transaction.invoiceId)
             .update({
-                paid: `${new Date().getUTCFullYear}-${new Date().getUTCMonth}-${new Date().getUTCDate}`,
+                paid: currentDate,
                 balance: 0
             }, "*")
     },
