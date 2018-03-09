@@ -28,16 +28,18 @@
     <p v-if="apiDataExists">Invoice {{ apiData.id }} has a ${{ apiData.balance.toFixed(2) }} balance. {{ apiData.balance === 0 ? "Did you mean to look up a different invoice?" : "" }}</p>
     <p v-if="errorExists">{{ error }}</p>
     <card class="stripe-card"
+      ref="card"
       :class="{ complete }"
       stripe="pk_test_IsDBxjcOKJ1omoSw62IVbyzq"
       :options="stripeOptions"
       @change="complete = $event.complete"
+      v-if="showCard && !paymentSuccessful"
     />
     <div class="button-wrapper">
       <button
         type="submit"
         :disabled="disablePayment"
-        :class="{ disabledButton: disablePayment }"
+        :class="{ hide: disablePayment }"
         @click.prevent="pay()"
       >Charge Card {{ apiSuccess ? `for $${apiData.balance.toFixed(2)}` : "" }}</button>
     </div>
@@ -81,14 +83,27 @@ export default {
       errorExists: false,
       error: "",
       chargeResponse: "",
+      showCard: false,
+      paymentSuccessful: false,
+      // hideButton: true,
     }
   },
 
   components: { Card },
 
+  mounted() {
+    // this.updateCard();
+    window.addEventListener("resize", (event) => {
+      if(document.querySelector(".StripeElement").classList.contains("StripeElement--empty")) {
+        this.updateCard()
+        this.showCard = true;
+      }
+    });
+  },
+
   methods: {
     getInvoice(invoiceId, name) {
-      fetch(`https://invoice-management-app.herokuapp.com/invoice/${this.$data.invoiceId}/${this.$data.name}`)
+      fetch(`https://invoice-management-app.herokuapp.com/invoice/${this.invoiceId}/${this.name}`)
         .then(res => {
           if(res.status < 400) {
             return res.json()
@@ -98,24 +113,26 @@ export default {
            }
         })
         .then(json => {
-          this.$data.errorExists = false;
-          this.$data.apiDataExists = true;
-          this.$data.apiData = json;
-          if(this.$data.apiData.balance) {
-            this.$data.apiSuccess = true;
-            this.$data.disableInvoiceLookup = true;
-            this.$data.disablePayment = false;
+          this.errorExists = false;
+          this.apiDataExists = true;
+          this.apiData = json;
+          if(this.apiData.balance) {
+            this.updateCard();
+            this.apiSuccess = true;
+            this.disableInvoiceLookup = true;
+            this.disablePayment = false;
+            this.showCard = true;
           }
         })
-        .then(() => console.log(this.$data.apiData))
+        .then(() => console.log(this.apiData))
         .catch(error => {
           console.log(error)
-          this.$data.error = error.error.message;
-          this.$data.errorExists = true;
+          this.error = error.error.message;
+          this.errorExists = true;
         })
     },
     pay () {
-      this.$data.disablePayment = true;
+      this.disablePayment = true;
       // createToken returns a Promise which resolves in a result object with
       // either a token or an error key.
       // See https://stripe.com/docs/api#tokens for the token object.
@@ -124,13 +141,13 @@ export default {
       createToken()
         .then(data => {console.log(data.token.id); return data.token.id})
         .then(token => {
-          return fetch(`http://localhost:3000/charge`, {
+          return fetch(`https://invoice-management-app.herokuapp.com/charge`, {
             method: "POST",
             body: JSON.stringify({
-              amount: this.$data.apiData.balance.toFixed(2),
+              amount: this.apiData.balance.toFixed(2),
               stripeToken: token,
-              invoiceId: this.$data.invoiceId,
-              name: this.$data.name
+              invoiceId: this.invoiceId,
+              name: this.name
             }),
             headers: new Headers({
               "Content-Type": "application/json"
@@ -139,11 +156,27 @@ export default {
         })
         .then(res => res.json())
         .then(json => {
-          this.$data.chargeResponse = json;
+          this.chargeResponse = json;
+          this.paymentSuccessful = true;
         })
         .catch(error => {
-          this.$data.chargeResponse = error;
+          this.chargeResponse = error;
         })
+    },
+    updateCard() {
+      this.showCard = false;
+      if (window.innerWidth >= 750) {
+        this.stripeOptions.style.base.fontSize = "25px";
+        this.stripeOptions.style.base.lineHeight = "25px";
+        // this.$refs.card.update(this.stripeOptions);
+      } else {
+        this.stripeOptions.style.base.fontSize = "3vw";
+        this.stripeOptions.style.base.lineHeight = "7.5vw";
+        // this.$refs.card.update(this.stripeOptions);
+      }
+      // setTimeout(() => {this.showCard = true}, 1);
+      // console.log(this.$refs);
+      // this.$refs.card.update()
     }
   }
 }
@@ -188,13 +221,16 @@ button:hover {
   cursor: pointer;
 }
 .disabledButton, .disabledButton:hover {
-  background-color: #dddddd;
+  background-color: #cccccc;
   color: white;
   cursor: default;
 }
 .button-wrapper {
   width: 70vw;
   margin: auto;
+}
+.hide {
+  display: none;
 }
 .input-wrapper {
   width: 70vw;
@@ -217,6 +253,7 @@ button:hover {
 }
 .StripeElement {
   height: 5vw;
+  background-color: red;
 }
 @media (max-width: 535px) {
   .stripe-card {
@@ -245,6 +282,33 @@ button:hover {
   .button-wrapper {
     width: 90vw;
     margin: auto;
+  }
+}
+
+@media(min-width: 750px) {
+  form, label, input, button {
+    font-size: 23px;
+  }
+
+  input {
+    height: 25px;
+  }
+
+  form button {
+    font-size: 23px;
+    height: 35px;
+    margin: 10px 0;
+  }
+
+  .stripe-card {
+    padding: 10px;
+    height: 45px;
+    box-sizing: border-box;
+  }
+
+  .StripeElement {
+    height: 31px;
+    line-height: 10px;
   }
 }
 </style>

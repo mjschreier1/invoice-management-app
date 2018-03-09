@@ -51,7 +51,6 @@ h1 {
 }
 
 a {
-  /* text-decoration: none; */
   color: white;
 }
 
@@ -84,5 +83,14 @@ iframe {
   .fa-icon {
     height: 30px;
   }
+
+  iframe input {
+    font-size: 23px !important;
+  }
+
+  .CardField-child {
+    font-size: 10px;
+  }
+
 }
 </style>
