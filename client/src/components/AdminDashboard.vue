@@ -2,10 +2,17 @@
   <div id="DashboardComponent">
     <header>
       <ul>
-        <li v-for="route in routes" :key="route.i">
+        <li
+          v-for="route in routes"
+          :key="route.i"
+        >
           <a :href="route.path">
-            <div class="router-link">
-              <p>{{ route.title }}</p>
+            <div
+              class="router-link"
+              :class="{ selectedRoute: route.selected }"
+              @click="selectRoute(route)"
+            >
+              <p @click="selectRoute(route)">{{ route.title }}</p>
             </div>
           </a>
         </li>
@@ -23,20 +30,33 @@ export default {
       routes: [
         {
           title: "Create",
-          path: "/#/dashboard/create"
+          path: "/#/dashboard/create",
+          selected: false,
         }, {
           title: "Update",
-          path: "/#/dashboard/update"
+          path: "/#/dashboard/update",
+          selected: false,
         }, {
           title: "View",
-          path: "/#/dashboard/books"
+          path: "/#/dashboard/books",
+          selected: false,
         }
       ],
     }
   },
 
-  methods: {
+  mounted() {
+    this.routes.forEach(route => {
+      if(location.href.includes(route.path)) {
+        route.selected = true;
+      }
+    })
+  },
 
+  methods: {
+    selectRoute(route) {
+      this.routes.forEach(destination => destination === route ? destination.selected = true : destination.selected = false)
+    }
   }
 }
 </script>
@@ -45,7 +65,7 @@ export default {
 li {
   list-style-type: none;
   width: 30%;
-  height: 5vh;
+  height: 6.5vh;
 }
 a {
   color: black;
@@ -57,7 +77,6 @@ li p {
 }
 .router-link {
   box-sizing: border-box;
-  border: 2px black;
   margin: auto;
   height: 100%;
   display: flex;
@@ -66,7 +85,8 @@ li p {
 }
 .router-link:hover {
   cursor: pointer;
-  background-color: green;
+  background-color: #00b26b;
+  color: white;
 }
 ul {
   display: flex;
@@ -76,14 +96,25 @@ ul {
   margin: auto;
   margin-top: 20px;
 }
+.selectedRoute {
+  border: 1px black solid;
+  background-color: #00b26b;
+  color: white;
+}
 @media(max-width: 500px) {
   ul {
     width: 90vw;
+  }
+  li p {
+    font-size: 4vw;
   }
 }
 @media(min-width: 750px) {
   li p {
     font-size: 25px;
+  }
+  li {
+    height: 5vh;
   }
 }
 </style>
