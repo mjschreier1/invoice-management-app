@@ -2,7 +2,7 @@
   <div id="createInvoiceComponent">
     <form>
       <div class="label-input-pair">
-        <div>
+        <div class="align-left">
           <label
             for="invoiceNumber"
             class="block"
@@ -12,13 +12,19 @@
             class="block"
           >(note: invoice numbers cannot be changed)</p>
         </div>
-        <input
-          type="number"
-          v-model="number"
-          class="five-digit block"
-          name="invoiceNumber"
-          disabled
-        />
+        <div class="align-right">
+          <input
+            type="number"
+            v-model="number"
+            class="five-digit block"
+            name="invoiceNumber"
+            disabled
+          />
+          <p
+            v-if="error"
+            class="block error"
+          >{{ errorMessage }}</p>
+        </div>
       </div>
       <div class="label-input-pair">
         <label
@@ -28,6 +34,7 @@
         <input
           type="text"
           class="block"
+          v-model="name"
         />
       </div>
       <div class="label-input-pair">
@@ -43,7 +50,8 @@
             name="issueMonth"
             class="two-digit"
             v-model="issueMonth"
-            @change="formatMonth()"
+            @change="formatIssueMonth()"
+            :class="{ invalidEntry: invalidateIssueMonth }"
           />
           <p>/</p>
           <input
@@ -53,7 +61,8 @@
             name="issueDate"
             class="two-digit"
             v-model="issueDate"
-            @change="formatDate()"
+            @change="formatIssueDate()"
+            :class="{ invalidEntry: invalidateIssueDate }"
           />
           <p>/</p>
           <input
@@ -85,7 +94,7 @@
             name="paidMonth"
             class="two-digit"
             v-model="paidMonth"
-            @change="formatMonth()"
+            @change="formatPaidMonth()"
           />
           <p>/</p>
           <input
@@ -95,7 +104,7 @@
             name="paidDate"
             class="two-digit"
             v-model="paidDate"
-            @change="formatDate()"
+            @change="formatPaidDate()"
           />
           <p>/</p>
           <input
@@ -155,8 +164,29 @@
           />
         </div>
       </div>
-      <button @click.prevent="submitForm()">Create Invoice</button>
+      <div class="label-input-pair">
+        <button
+          @click.prevent="submitForm()"
+          :disabled="!number || error || invalidateIssueMonth || invalidateIssueDate || invalidatePaidMonth || invalidatePaidDate || !amountDue || disableButton"
+          :class="{ formValid: number && !error && !invalidateIssueMonth && !invalidateIssueDate && !invalidatePaidMonth && !invalidatePaidDate && amountDue && !disableButton }"
+        >Create Invoice</button>
+      </div>
     </form>
+    <p
+      v-if="successMessage"
+      class="responseMessage"
+    >{{ successMessage.message }}</p>
+    <p
+      v-if="failureMessage"
+      class="responseMessage"
+    >{{ failureMessage.error.message }}</p>
+    <div class="label-input-pair">
+      <button
+        v-if="successMessage || failureMessage"
+        class="formValid"
+        @click="refreshForm()"
+      >{{ successMessage ? "Create Another Invoice" : "Try Again" }}</button>
+    </div>
   </div>
 </template>
 
@@ -165,35 +195,116 @@ export default {
   name: "CreateInvoice",
   data () {
     return {
-      number: 88888,
+      number: "",
+      error: false,
+      errorMessage: "",
+      name: "",
       issueMonth: new Date().getMonth() + 1,
+      invalidateIssueMonth: false,
       issueDate: new Date().getDate(),
+      invalidateIssueDate: false,
       issueYear: new Date().getFullYear(),
       paid: false,
       paidMonth: new Date().getMonth() + 1,
+      invalidatePaidMonth: false,
       paidDate: new Date().getDate(),
+      invalidatePaidDate: false,
       paidYear: new Date().getFullYear(),
       amountDue: "",
       convenienceFee: "",
       totalWithFee: "",
+      disableButton: false,
+      successMessage: "",
+      failureMessage: "",
     }
   },
 
   mounted() {
-    this.formatMonth();
-    this.formatDate();
+    this.formatIssueMonth();
+    this.formatPaidMonth();
+    this.formatIssueDate();
+    this.formatPaidDate();
+    this.getNextInvoiceNumber();
   },
 
   methods: {
-    formatMonth() {
-      if(this.month < 10) {
-        this.month = `0${this.month}`;
-      }
+    getNextInvoiceNumber() {
+      return fetch("http://localhost:3000/next-invoice")
+        .then(res => {
+          if(res.status < 400) {
+            return res.json()
+          } else {
+            return res.json()
+              .then(error => {throw error})
+          }
+        })
+        .then(json => this.number = json.max + 1)
+        .catch(err => {
+          this.error = true;
+          this.errorMessage = err.error.message;
+        })
     },
-    formatDate() {
-      if(this.date < 10) {
-        this.date = `0${this.date}`;
-      }
+    formatIssueMonth() {
+      if(this.issueMonth < 10 && (!this.issueMonth.toString().includes("0") || this.issueMonth.toString().length > 2)) {
+        this.issueMonth = `0${parseInt(this.issueMonth)}`;
+      };
+      if(this.issueMonth < 1 || this.issueMonth > 12) {
+        this.invalidateIssueMonth = true;
+      } else {
+        this.invalidateIssueMonth = false;
+      };
+      if((this.issueMonth == 2 && this.issueYear % 4 == 0 && this.issueDate > 29)
+        || (this.issueMonth == 2 && this.issueYear % 4 != 0 && this.issueDate > 28)
+        || ((this.issueMonth == 3 || this.issueMonth == 4 || this.issueMonth == 6 || this.issueMonth == 9 || this.issueMonth == 11) && this.issueDate > 30)) {
+        this.invalidateIssueDate = true;
+      } else {
+        this.invalidateIssueDate = false;
+      };
+    },
+    formatPaidMonth() {
+      if(this.issueMonth < 10 && (!this.issueMonth.toString().includes("0") || this.issueMonth.toString().length > 2)) {
+        this.issueMonth = `0${parseInt(this.issueMonth)}`;
+      };
+      if(this.paidMonth < 1 || this.paidMonth > 12) {
+        this.invalidatePaidMonth = true;
+      } else {
+        this.invalidatePaidMonth = false;
+      };
+      if((this.issueMonth == 2 && this.issueYear % 4 == 0 && this.issueDate > 29)
+        || (this.issueMonth == 2 && this.issueYear % 4 != 0 && this.issueDate > 28)
+        || ((this.issueMonth == 3 || this.issueMonth == 4 || this.issueMonth == 6 || this.issueMonth == 9 || this.issueMonth == 11) && this.issueDate > 30)) {
+        this.invalidateIssueDate = true;
+      } else {
+        this.invalidateIssueDate = false;
+      };
+    },
+    formatIssueDate() {
+      if(this.issueDate < 10) {
+        this.issueDate = `0${this.issueDate}`;
+      };
+      if(this.issueDate < 1
+        || this.issueDate > 31
+        || (this.issueMonth === 2 && this.issueYear % 4 === 0 && this.issueDate > 29)
+        || (this.issueMonth === 2 && this.issueYear % 4 !== 0 && this.issueDate > 28)
+        || ((this.issueMonth === 3 || this.issueMonth === 4 || this.issueMonth === 6 || this.issueMonth === 9 || this.issueMonth === 11) && this.issueDate > 30)) {
+        this.invalidateIssueDate = true;
+      } else {
+        this.invalidateIssueDate = false;
+      };
+    },
+    formatPaidDate() {
+      if(this.paidDate < 10) {
+        this.paidDate = `0${this.paidDate}`;
+      };
+      if(this.paidDate < 1
+        || this.paidDate > 31
+        || (this.paidMonth === 2 && this.paidYear % 4 === 0 && this.paidDate > 29)
+        || (this.paidMonth === 2 && this.paidYear % 4 !== 0 && this.paidDate > 28)
+        || ((this.paidMonth === 3 || this.paidMonth === 4 || this.paidMonth === 6 || this.paidMonth === 9 || this.paidMonth === 11) && this.paidDate > 30)) {
+        this.invalidatePaidDate = true;
+      } else {
+        this.invalidatePaidDate = false;
+      };
     },
     togglePaid() {
       this.paid = !this.paid;
@@ -202,24 +313,84 @@ export default {
       this.amountDue = parseFloat(this.amountDue).toFixed(2);
       this.totalWithFee = (this.amountDue / 0.971 + 0.3).toFixed(2);
       this.convenienceFee = (this.totalWithFee - this.amountDue).toFixed(2);
+    },
+    submitForm() {
+      this.disableButton = true;
+      return fetch("http://localhost:3000/new-invoice", {
+        method: "POST",
+        body: JSON.stringify({
+          invoiceId: this.number,
+          name: this.name,
+          issued: `${this.issueYear}-${this.issueMonth}-${this.issueDate}`,
+          paid: this.paid ? `${this.paidYear}-${this.paidMonth}-${this.paidDate}` : "",
+          amount_due: this.amountDue,
+          convenience_fee_if_cc: this.convenienceFee,
+          grand_total_if_cc: this.totalWithFee,
+          balance: this.paid ? 0 : this.amountDue
+        }),
+        headers: new Headers({
+          "content-type": "application/json"
+        })
+      })
+        .then(res => {
+          if(res.status < 400) {
+            return res.json()
+          } else {
+            return res.json()
+              .then(error => {throw error})
+          }
+        })
+        .then(json => {
+          this.successMessage = json;
+        })
+        .catch(err => {
+          this.failureMessage = err;
+        })
+    },
+    refreshForm() {
+      this.number = "";
+      this.error = false,
+      this.errorMessage = "";
+      this.name = "";
+      this.issueMonth = new Date().getMonth() + 1;
+      this.invalidateIssueMonth = false;
+      this.issueDate = new Date().getDate();
+      this.invalidateIssueDate = false;
+      this.issueYear = new Date().getFullYear();
+      this.paid = false;
+      this.paidMonth = new Date().getMonth() + 1;
+      this.invalidatePaidMonth = false;
+      this.paidDate = new Date().getDate();
+      this.invalidatePaidDate = false;
+      this.paidYear = new Date().getFullYear();
+      this.amountDue = "";
+      this.convenienceFee = "";
+      this.totalWithFee = "";
+      this.disableButton = false;
+      this.successMessage = "";
+      this.failureMessage = "";
+
+      this.formatIssueMonth();
+      this.formatPaidMonth();
+      this.formatIssueDate();
+      this.formatPaidDate();
+      this.getNextInvoiceNumber();
     }
 
   },
 
-  filters: {
-  }
 }
 </script>
 
 <style scoped>
 #createInvoiceComponent {
   width: 90vw;
-  /* margin: 20px auto 0; */
   margin: auto;
   border: 2px black solid;
   background-color: #dddddd;
+  margin-bottom: 20px;
 }
-form p {
+p {
   display: inline;
 }
 #invoiceNote {
@@ -227,8 +398,15 @@ form p {
   font-size: 2.5vw;
   margin: 0;
 }
-label {
+label, .responseMessage {
   font-size: 3vw;
+}
+.responseMessage {
+  /* width: 100%; */
+  display: block;
+  margin: 0;
+}
+label {
   padding-top: 10px;
 }
 input {
@@ -237,6 +415,12 @@ input {
 }
 input[type="checkbox"] {
   transform: scale(1.5)
+}
+button {
+  height: 4.5vw;
+  font-size: 3vw;
+  margin-bottom: 20px;
+  background-color: #bbbbbb;
 }
 .two-digit {
   width: 3em;
@@ -253,8 +437,24 @@ input[type="checkbox"] {
 .block {
   display: block;
 }
+.error {
+  color: red;
+}
+.invalidEntry {
+  color: red;
+  border: solid 2px red;
+}
+.formValid {
+  background-color: #00b26b;
+  color: white;
+}
+.formValid:hover {
+  color: #eeeeee;
+  background-color: #32a973;
+  cursor: pointer;
+}
 @media(max-width: 500px) {
-  label {
+  label, .responseMessage {
     font-size: 4vw;
   }
   #invoiceNote {
@@ -266,6 +466,11 @@ input[type="checkbox"] {
   }
   input[type="checkbox"] {
     transform: scale(1)
+  }
+  button {
+    height: 6vw;
+    font-size: 4vw;
+    margin-top: 20px;
   }
   .block {
     margin: auto;
@@ -279,12 +484,32 @@ input[type="checkbox"] {
     padding: 0 20px;
     margin-top: 20px;
   }
+  .responseMessage {
+    padding: 0 20px
+  }
+  button {
+    width: 100%;
+  }
   label {
     padding: 0;
   }
+  .align-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .align-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 @media(min-width: 750px) {
-  label {
+  label, .responseMessage {
+    font-size: 25px;
+  }
+  button {
+    height: 35px;
     font-size: 25px;
   }
   #invoiceNote {
@@ -297,12 +522,12 @@ input[type="checkbox"] {
   input[type="checkbox"] {
     transform: scale(1.75)
   }
-  .label-input-pair {
+  .label-input-pair, .responseMessage {
     padding: 0 6.9vw;
   }
 }
 @media(min-width: 1500px) {
-  .label-input-pair {
+  .label-input-pair, .responseMessage {
     padding: 0 20vw;
   }
 }

@@ -21,9 +21,9 @@ app.get("/invoice/:id/:name", (req, res) => {
                 error: {
                     message: "Oops, we couldn't match your invoice number and name!"
                 }
-            })
-        })
-})
+            });
+        });
+});
 
 app.post("/charge", (req, res) => {
     console.log(req.body);
@@ -61,6 +61,38 @@ app.post("/charge", (req, res) => {
                 message: "Transaction failed.",
             })
         });
+});
+
+app.get("/next-invoice", (req, res) => {
+    queries.findNextInvoiceId()
+        .then(record => res.json(record))
+        .catch(() => {
+            res.status(500);
+            res.json({
+                error: {
+                    message: "Could not load next invoice ID"
+                }
+            });
+        });
+})
+
+app.post("/new-invoice", (req, res) => {
+    console.log(req.body)
+    queries.addNewInvoice(req.body)
+        .then(id => {
+            res.status(201);
+            res.json({
+                message: `Invoice ${id} created.`
+            })
+        })
+        .catch(err => {
+            res.status(400);
+            res.json({
+                error: {
+                    message: `Could not create invoice ${id}.`
+                }
+            })
+        })
 })
 
 app.listen(port, () => {
