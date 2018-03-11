@@ -14,11 +14,14 @@ module.exports = {
 
     processPayment(transaction) {
         setDate();
-        console.log(transaction.invoiceId)
         return database("invoices").where("id", transaction.invoiceId)
             .update({
                 paid: currentDate,
                 balance: 0
             }, "*")
     },
+
+    findNextInvoiceId() {
+        return database("invoices").max("id")
+    }
 }

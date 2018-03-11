@@ -298,7 +298,12 @@ input[type="checkbox"] {
     transform: scale(1.75)
   }
   .label-input-pair {
-    padding: 0 50px;
+    padding: 0 6.9vw;
+  }
+}
+@media(min-width: 1500px) {
+  .label-input-pair {
+    padding: 0 20vw;
   }
 }
 </style>
