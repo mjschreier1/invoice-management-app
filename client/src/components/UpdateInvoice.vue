@@ -18,8 +18,8 @@
           @click.prevent="loadInvoice()"
           id="loadInvoice"
           class="button"
-          :disabled="loadInvoiceForm"
-          :class="{ formValid: !loadInvoiceForm }"
+          :disabled="loadInvoiceForm || !number"
+          :class="{ formValid: !loadInvoiceForm && number }"
         >Load Invoice</button>
       </div>
       <p
@@ -66,6 +66,7 @@
             type="text"
             class="block"
             v-model="name"
+            :disabled="disableEditing"
           />
         </div>
         <div class="label-input-pair">
@@ -84,6 +85,7 @@
               @change="formatIssueMonth()"
               @blur="formatIssueMonth()"
               :class="{ invalidEntry: invalidateIssueMonth }"
+              :disabled="disableEditing"
             />
             <p>/</p>
             <input
@@ -96,6 +98,7 @@
               @change="formatIssueDate()"
               @blur="formatIssueDate()"
               :class="{ invalidEntry: invalidateIssueDate }"
+              :disabled="disableEditing"
             />
             <p>/</p>
             <input
@@ -103,15 +106,17 @@
               name="issueYear"
               class="four-digit"
               v-model="issueYear"
+              :disabled="disableEditing"
             />
           </div>
         </div>
-        <div class="label-input-pair">
+        <div class="label-input-pair padding-top">
           <label for="paid">Has this invoice already been paid?</label>
           <input
             type="checkbox"
             v-model="paid"
             @click="togglePaid()"
+            :disabled="disableEditing"
           />
         </div>
         <div
@@ -130,6 +135,7 @@
               @change="formatPaidMonth()"
               @blur="formatPaidMonth()"
               :class="{ invalidEntry: invalidatePaidMonth }"
+              :disabled="disableEditing"
             />
             <p>/</p>
             <input
@@ -142,6 +148,7 @@
               @change="formatPaidDate()"
               @blur="formatPaidDate()"
               :class="{ invalidEntry: invalidatePaidDate }"
+              :disabled="disableEditing"
             />
             <p>/</p>
             <input
@@ -149,6 +156,7 @@
               name="paidYear"
               class="four-digit"
               v-model="paidYear"
+              :disabled="disableEditing"
             />
           </div>
         </div>
@@ -166,6 +174,7 @@
               min="0.01"
               v-model="amountDue"
               @blur="formatAmountDue()"
+              :disabled="disableEditing"
             />
           </div>
         </div>
@@ -205,8 +214,8 @@
           <button
             @click.prevent="submitForm()"
             class="button completeButton block"
-            :disabled="!number || !name || !issueYear || error || invalidateIssueMonth || invalidateIssueDate || invalidatePaidMonth || invalidatePaidDate || !amountDue || disableButton"
-            :class="{ formValid: number && name && issueYear && !error && !invalidateIssueMonth && !invalidateIssueDate && !invalidatePaidMonth && !invalidatePaidDate && amountDue && !disableButton }"
+            :disabled="!number || !name || !issueYear || error || invalidateIssueMonth || invalidateIssueDate || invalidatePaidMonth || invalidatePaidDate || !amountDue || amountDue == 'NaN' || disableButton"
+            :class="{ formValid: number && name && issueYear && !error && !invalidateIssueMonth && !invalidateIssueDate && !invalidatePaidMonth && !invalidatePaidDate && amountDue && amountDue != 'NaN' && !disableButton }"
           >Save Changes</button>
           <button
             @click.prevent="discardChanges()"
@@ -233,9 +242,10 @@
       <div class="label-input-pair">
         <button
           v-if="successMessage || failureMessage"
-          class="formValid"
-          @click="refreshForm()"
-        >{{ successMessage ? "Create Another Invoice" : "Try Again" }}</button>
+          class="formValid button"
+          @click="refresh()"
+          id="refresh"
+        >{{ successMessage ? "Update Another Invoice" : "Try Another Invoice Instead" }}</button>
       </div>
     </div>
   </div>
@@ -270,6 +280,7 @@ export default {
       successMessage: "",
       failureMessage: "",
       balance: "",
+      disableEditing: false,
     }
   },
 
@@ -393,6 +404,7 @@ export default {
     },
     submitForm() {
       this.disableButton = true;
+      this.disableEditing = true;
       return fetch(`http://localhost:3000/update-invoice/${this.number}`, {
         method: "PUT",
         body: JSON.stringify({
@@ -423,11 +435,16 @@ export default {
         })
         .catch(err => {
           this.failureMessage = err;
+          this.disableEditing = false;
         })
     },
     discardChanges() {
       if(confirm("Are you sure you want to discard changes?")) {
-        this.loadInvoiceForm = false,
+        this.refresh()
+      }
+    },
+    refresh() {
+      this.loadInvoiceForm = false,
         this.error = "",
         this.errorMessage = "",
 
@@ -450,11 +467,15 @@ export default {
         this.disableButton = false,
         this.successMessage = "",
         this.failureMessage = "",
-        this.balance = ""
-      }
+        this.balance = "",
+        this.disableEditing = false
     },
     deleteRecord() {
-      if(this.paid) {alert("Cannot delete invoices that have already been paid.")}
+      this.disableEditing = true;
+      if(this.paid) {
+        alert("Cannot delete invoices that have already been paid.");
+        this.disableEditing = false;g
+      }
       if(!this.paid && confirm("Are you sure you want to permanently delete this invoice?")) {
         return fetch(`http://localhost:3000/delete-invoice/${this.number}`, {method: "DELETE"})
           .then(res => {
@@ -471,38 +492,10 @@ export default {
           })
           .catch(err => {
             this.failureMessage = err;
+            this.disableEditing = false;
           })
       }
     },
-    refreshForm() {
-      this.number = "";
-      this.error = false,
-      this.errorMessage = "";
-      this.name = "";
-      this.issueMonth = new Date().getMonth() + 1;
-      this.invalidateIssueMonth = false;
-      this.issueDate = new Date().getDate();
-      this.invalidateIssueDate = false;
-      this.issueYear = new Date().getFullYear();
-      this.paid = false;
-      this.paidMonth = new Date().getMonth() + 1;
-      this.invalidatePaidMonth = false;
-      this.paidDate = new Date().getDate();
-      this.invalidatePaidDate = false;
-      this.paidYear = new Date().getFullYear();
-      this.amountDue = "";
-      this.convenienceFee = "";
-      this.totalWithFee = "";
-      this.disableButton = false;
-      this.successMessage = "";
-      this.failureMessage = "";
-
-      this.formatIssueMonth();
-      this.formatPaidMonth();
-      this.formatIssueDate();
-      this.formatPaidDate();
-      this.getNextInvoiceNumber();
-    }
   }
 }
 </script>
@@ -531,7 +524,7 @@ label, .responseMessage {
   display: block;
   margin: 0;
 }
-label {
+label, .padding-top {
   padding-top: 10px;
 }
 input {
@@ -643,10 +636,10 @@ button {
   .responseMessage {
     padding: 0 20px
   }
-  button {
+  .completeButton {
     width: 32%;
   }
-  #loadInvoice {
+  #loadInvoice, #refresh {
     width: 100%;
   }
   label {

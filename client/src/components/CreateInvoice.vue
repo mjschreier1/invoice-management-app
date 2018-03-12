@@ -35,6 +35,7 @@
           type="text"
           class="block"
           v-model="name"
+          :disabled="disableEditing"
         />
       </div>
       <div class="label-input-pair">
@@ -53,6 +54,7 @@
             @change="formatIssueMonth()"
             @blur="formatIssueMonth()"
             :class="{ invalidEntry: invalidateIssueMonth }"
+            :disabled="disableEditing"
           />
           <p>/</p>
           <input
@@ -65,6 +67,7 @@
             @change="formatIssueDate()"
             @blur="formatIssueDate()"
             :class="{ invalidEntry: invalidateIssueDate }"
+            :disabled="disableEditing"
           />
           <p>/</p>
           <input
@@ -72,15 +75,17 @@
             name="issueYear"
             class="four-digit"
             v-model="issueYear"
+            :disabled="disableEditing"
           />
         </div>
       </div>
-      <div class="label-input-pair">
+      <div class="label-input-pair padding-top">
         <label for="paid">Has this invoice already been paid?</label>
         <input
           type="checkbox"
           v-model="paid"
           @click="togglePaid()"
+          :disabled="disableEditing"
         />
       </div>
       <div
@@ -99,6 +104,7 @@
             @change="formatPaidMonth()"
             @blur="formatPaidMonth()"
             :class="{ invalidEntry: invalidatePaidMonth }"
+            :disabled="disableEditing"
           />
           <p>/</p>
           <input
@@ -111,6 +117,7 @@
             @change="formatPaidDate()"
             @blur="formatPaidDate()"
             :class="{ invalidEntry: invalidatePaidDate }"
+            :disabled="disableEditing"
           />
           <p>/</p>
           <input
@@ -118,6 +125,7 @@
             name="paidYear"
             class="four-digit"
             v-model="paidYear"
+            :disabled="disableEditing"
           />
         </div>
       </div>
@@ -135,6 +143,7 @@
             min="0.01"
             v-model="amountDue"
             @blur="formatAmountDue()"
+            :disabled="disableEditing"
           />
         </div>
       </div>
@@ -173,8 +182,8 @@
       <div class="label-input-pair">
         <button
           @click.prevent="submitForm()"
-          :disabled="!number || !name || !issueYear || error || invalidateIssueMonth || invalidateIssueDate || invalidatePaidMonth || invalidatePaidDate || !amountDue || disableButton"
-          :class="{ formValid: number && name && issueYear && !error && !invalidateIssueMonth && !invalidateIssueDate && !invalidatePaidMonth && !invalidatePaidDate && amountDue && !disableButton }"
+          :disabled="!number || !name || !issueYear || error || invalidateIssueMonth || invalidateIssueDate || invalidatePaidMonth || invalidatePaidDate || !amountDue || amountDue == 'NaN' || disableButton"
+          :class="{ formValid: number && name && issueYear && !error && !invalidateIssueMonth && !invalidateIssueDate && !invalidatePaidMonth && !invalidatePaidDate && amountDue && amountDue != 'NaN' && !disableButton }"
         >Create Invoice</button>
       </div>
     </form>
@@ -222,6 +231,7 @@ export default {
       disableButton: false,
       successMessage: "",
       failureMessage: "",
+      disableEditing: false,
     }
   },
 
@@ -324,6 +334,7 @@ export default {
     },
     submitForm() {
       this.disableButton = true;
+      this.disableEditing = true;
       return fetch("http://localhost:3000/new-invoice", {
         method: "POST",
         body: JSON.stringify({
@@ -377,6 +388,7 @@ export default {
       this.disableButton = false;
       this.successMessage = "";
       this.failureMessage = "";
+      this.disableEditing = false;
 
       this.formatIssueMonth();
       this.formatPaidMonth();
@@ -414,7 +426,7 @@ label, .responseMessage {
   display: block;
   margin: 0;
 }
-label {
+label, .padding-top {
   padding-top: 10px;
 }
 input {

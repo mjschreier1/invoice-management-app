@@ -103,7 +103,7 @@ export default {
 
   methods: {
     getInvoice(invoiceId, name) {
-      fetch(`https://invoice-management-app.herokuapp.com/invoice/${this.invoiceId}/${this.name}`)
+      fetch(`http://localhost:3000/invoice/${this.invoiceId}/${this.name}`)
         .then(res => {
           if(res.status < 400) {
             return res.json()
@@ -127,7 +127,7 @@ export default {
         .then(() => console.log(this.apiData))
         .catch(error => {
           console.log(error)
-          this.error = error.error.message;
+          this.error = error.error.message || error;
           this.errorExists = true;
         })
     },
@@ -141,7 +141,7 @@ export default {
       createToken()
         .then(data => {console.log(data.token.id); return data.token.id})
         .then(token => {
-          return fetch(`https://invoice-management-app.herokuapp.com/charge`, {
+          return fetch(`http://localhost:3000/charge`, {
             method: "POST",
             body: JSON.stringify({
               amount: this.apiData.balance.toFixed(2),
