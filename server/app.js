@@ -85,11 +85,27 @@ app.post("/new-invoice", (req, res) => {
                 message: `Invoice ${id} created.`
             })
         })
-        .catch(err => {
+        .catch(() => {
             res.status(400);
             res.json({
                 error: {
-                    message: `Could not create invoice ${id}.`
+                    message: `Could not create invoice.`
+                }
+            })
+        })
+})
+
+app.get("/get-invoice/:id", (req, res) => {
+    queries.getInvoice(req.params.id)
+        .then(record => {
+            res.status(200);
+            res.json(record);
+        })
+        .catch(() => {
+            res.status(404);
+            res.json({
+                error: {
+                    message: `Could not find invoice ${req.params.id}.`
                 }
             })
         })

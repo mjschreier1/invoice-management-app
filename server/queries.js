@@ -38,5 +38,10 @@ module.exports = {
             record.paid = data.paid
         }
         return database("invoices").insert(record, "id")
+    },
+
+    getInvoice(id) {
+        return database.select("*").from("invoices").where("id", id).first()
+            .then(record => new Promise((resolve, reject) => record ? resolve(record) : reject(record)))
     }
 }

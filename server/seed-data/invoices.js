@@ -11,7 +11,6 @@ let data = [
     id: 1002,
     name: "galvanize opera theatre",
     issued: "2018-01-15",
-    // paid: "",
     amount_due: 1000,
     balance: 1000
   },
@@ -19,7 +18,6 @@ let data = [
     id: 1003,
     name: "johnson",
     issued: "2018-03-01",
-    // paid: "",
     amount_due: 120,
     balance: 120
   },
@@ -43,7 +41,6 @@ let data = [
     id: 1006,
     name: "williams",
     issued: "2018-03-01",
-    // paid: "",
     amount_due: 120,
     balance: 120
   },
@@ -51,7 +48,6 @@ let data = [
     id: 1007,
     name: "miller",
     issued: "2018-03-01",
-    // paid: "",
     amount_due: 120,
     balance: 120
   },
@@ -59,7 +55,6 @@ let data = [
     id: 1008,
     name: "wilson",
     issued: "2018-03-01",
-    // paid: "",
     amount_due: 120,
     balance: 120
   },
@@ -67,7 +62,6 @@ let data = [
     id: 1009,
     name: "galvanize music school",
     issued: "2018-03-05",
-    // paid: "",
     amount_due: 250,
     balance: 250
   }
