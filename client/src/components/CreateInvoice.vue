@@ -51,6 +51,7 @@
             class="two-digit"
             v-model="issueMonth"
             @change="formatIssueMonth()"
+            @blur="formatIssueMonth()"
             :class="{ invalidEntry: invalidateIssueMonth }"
           />
           <p>/</p>
@@ -62,6 +63,7 @@
             class="two-digit"
             v-model="issueDate"
             @change="formatIssueDate()"
+            @blur="formatIssueDate()"
             :class="{ invalidEntry: invalidateIssueDate }"
           />
           <p>/</p>
@@ -95,6 +97,8 @@
             class="two-digit"
             v-model="paidMonth"
             @change="formatPaidMonth()"
+            @blur="formatPaidMonth()"
+            :class="{ invalidEntry: invalidatePaidMonth }"
           />
           <p>/</p>
           <input
@@ -105,6 +109,8 @@
             class="two-digit"
             v-model="paidDate"
             @change="formatPaidDate()"
+            @blur="formatPaidDate()"
+            :class="{ invalidEntry: invalidatePaidDate }"
           />
           <p>/</p>
           <input
@@ -167,8 +173,8 @@
       <div class="label-input-pair">
         <button
           @click.prevent="submitForm()"
-          :disabled="!number || error || invalidateIssueMonth || invalidateIssueDate || invalidatePaidMonth || invalidatePaidDate || !amountDue || disableButton"
-          :class="{ formValid: number && !error && !invalidateIssueMonth && !invalidateIssueDate && !invalidatePaidMonth && !invalidatePaidDate && amountDue && !disableButton }"
+          :disabled="!number || !name || !issueYear || error || invalidateIssueMonth || invalidateIssueDate || invalidatePaidMonth || invalidatePaidDate || !amountDue || disableButton"
+          :class="{ formValid: number && name && issueYear && !error && !invalidateIssueMonth && !invalidateIssueDate && !invalidatePaidMonth && !invalidatePaidDate && amountDue && !disableButton }"
         >Create Invoice</button>
       </div>
     </form>
@@ -178,7 +184,7 @@
     >{{ successMessage.message }}</p>
     <p
       v-if="failureMessage"
-      class="responseMessage"
+      class="responseMessage error"
     >{{ failureMessage.error.message }}</p>
     <div class="label-input-pair">
       <button
@@ -245,7 +251,15 @@ export default {
         })
     },
     formatIssueMonth() {
-      if(this.issueMonth < 10 && (!this.issueMonth.toString().includes("0") || this.issueMonth.toString().length > 2)) {
+      if(this.issueMonth == NaN
+        || (this.issueMonth == 2 && this.issueYear % 4 == 0 && this.issueDate > 29)
+        || (this.issueMonth == 2 && this.issueYear % 4 != 0 && this.issueDate > 28)
+        || ((this.issueMonth == 3 || this.issueMonth == 4 || this.issueMonth == 6 || this.issueMonth == 9 || this.issueMonth == 11) && this.issueDate > 30)) {
+        this.invalidateIssueMonth = true;
+      } else {
+        this.invalidateIssueMonth = false;
+      };
+      if(this.issueMonth < 10 && (!this.issueMonth.toString().includes("0") && this.issueMonth || this.issueMonth.toString().length > 2)) {
         this.issueMonth = `0${parseInt(this.issueMonth)}`;
       };
       if(this.issueMonth < 1 || this.issueMonth > 12) {
@@ -253,33 +267,27 @@ export default {
       } else {
         this.invalidateIssueMonth = false;
       };
-      if((this.issueMonth == 2 && this.issueYear % 4 == 0 && this.issueDate > 29)
-        || (this.issueMonth == 2 && this.issueYear % 4 != 0 && this.issueDate > 28)
-        || ((this.issueMonth == 3 || this.issueMonth == 4 || this.issueMonth == 6 || this.issueMonth == 9 || this.issueMonth == 11) && this.issueDate > 30)) {
-        this.invalidateIssueDate = true;
-      } else {
-        this.invalidateIssueDate = false;
-      };
     },
     formatPaidMonth() {
-      if(this.issueMonth < 10 && (!this.issueMonth.toString().includes("0") || this.issueMonth.toString().length > 2)) {
-        this.issueMonth = `0${parseInt(this.issueMonth)}`;
+      if(this.paidMonth == NaN
+        || (this.paidMonth == 2 && this.paidYear % 4 == 0 && this.paidDate > 29)
+        || (this.paidMonth == 2 && this.paidYear % 4 != 0 && this.paidDate > 28)
+        || ((this.paidMonth == 3 || this.paidMonth == 4 || this.paidMonth == 6 || this.paidMonth == 9 || this.paidMonth == 11) && this.paidDate > 30)) {
+        this.invalidatePaidDate = true;
+      } else {
+        this.invalidatePaidDate = false;
+      };
+      if(this.paidMonth < 10 && (!this.paidMonth.toString().includes("0") && this.paidMonth || this.paidMonth.toString().length > 2)) {
+        this.paidMonth = `0${parseInt(this.paidMonth)}`;
       };
       if(this.paidMonth < 1 || this.paidMonth > 12) {
         this.invalidatePaidMonth = true;
       } else {
         this.invalidatePaidMonth = false;
       };
-      if((this.issueMonth == 2 && this.issueYear % 4 == 0 && this.issueDate > 29)
-        || (this.issueMonth == 2 && this.issueYear % 4 != 0 && this.issueDate > 28)
-        || ((this.issueMonth == 3 || this.issueMonth == 4 || this.issueMonth == 6 || this.issueMonth == 9 || this.issueMonth == 11) && this.issueDate > 30)) {
-        this.invalidateIssueDate = true;
-      } else {
-        this.invalidateIssueDate = false;
-      };
     },
     formatIssueDate() {
-      if(this.issueDate < 10) {
+      if(this.issueDate < 10 && (!this.issueDate.toString().includes("0")) && this.issueDate || this.issueDate.toString().length > 2) {
         this.issueDate = `0${this.issueDate}`;
       };
       if(this.issueDate < 1
@@ -293,7 +301,7 @@ export default {
       };
     },
     formatPaidDate() {
-      if(this.paidDate < 10) {
+      if(this.paidDate < 10 && (!this.paidDate.toString().includes("0")) && this.paidDate || this.paidDate.toString().length > 2) {
         this.paidDate = `0${this.paidDate}`;
       };
       if(this.paidDate < 1

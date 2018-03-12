@@ -96,6 +96,7 @@ app.post("/new-invoice", (req, res) => {
 })
 
 app.get("/get-invoice/:id", (req, res) => {
+    console.log("Request received", req.params.id)
     queries.getInvoice(req.params.id)
         .then(record => {
             res.status(200);
@@ -106,6 +107,44 @@ app.get("/get-invoice/:id", (req, res) => {
             res.json({
                 error: {
                     message: `Could not find invoice ${req.params.id}.`
+                }
+            })
+        })
+})
+
+app.put("/update-invoice/:id", (req, res) => {
+    console.log("Request received", req.params.id, req.body)
+    queries.updateRecord(req.body)
+        .then(id => {
+            res.status(200);
+            res.json({
+                message: `Invoice ${id} updated.`
+            })
+        })
+        .catch(() => {
+            res.status(400);
+            res.json({
+                error: {
+                    message: `Could not update invoice.`
+                }
+            })
+        })
+})
+
+app.delete("/delete-invoice/:id", (req, res) => {
+    console.log("deleting", req.params.id)
+    queries.deleteRecord(req.params.id)
+        .then(() => {
+            res.status(200);
+            res.json({
+                message: `Invoice ${req.params.id} deleted.`
+            })
+        })
+        .catch(() => {
+            res.status(400);
+            res.json({
+                error: {
+                    message: `Could not delete invoice.`
                 }
             })
         })

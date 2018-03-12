@@ -10,13 +10,16 @@
           type="number"
           class="five-digit block"
           v-model="number"
+          :disabled="loadInvoiceForm"
         >
       </div>
       <div class="label-input-pair">
         <button
           @click.prevent="loadInvoice()"
-          class="formValid"
           id="loadInvoice"
+          class="button"
+          :disabled="loadInvoiceForm"
+          :class="{ formValid: !loadInvoiceForm }"
         >Load Invoice</button>
       </div>
       <p
@@ -79,6 +82,7 @@
               class="two-digit"
               v-model="issueMonth"
               @change="formatIssueMonth()"
+              @blur="formatIssueMonth()"
               :class="{ invalidEntry: invalidateIssueMonth }"
             />
             <p>/</p>
@@ -90,6 +94,7 @@
               class="two-digit"
               v-model="issueDate"
               @change="formatIssueDate()"
+              @blur="formatIssueDate()"
               :class="{ invalidEntry: invalidateIssueDate }"
             />
             <p>/</p>
@@ -123,6 +128,8 @@
               class="two-digit"
               v-model="paidMonth"
               @change="formatPaidMonth()"
+              @blur="formatPaidMonth()"
+              :class="{ invalidEntry: invalidatePaidMonth }"
             />
             <p>/</p>
             <input
@@ -133,6 +140,8 @@
               class="two-digit"
               v-model="paidDate"
               @change="formatPaidDate()"
+              @blur="formatPaidDate()"
+              :class="{ invalidEntry: invalidatePaidDate }"
             />
             <p>/</p>
             <input
@@ -195,9 +204,22 @@
         <div class="label-input-pair">
           <button
             @click.prevent="submitForm()"
-            :disabled="!number || error || invalidateIssueMonth || invalidateIssueDate || invalidatePaidMonth || invalidatePaidDate || !amountDue || disableButton"
-            :class="{ formValid: number && !error && !invalidateIssueMonth && !invalidateIssueDate && !invalidatePaidMonth && !invalidatePaidDate && amountDue && !disableButton }"
-          >Create Invoice</button>
+            class="button completeButton block"
+            :disabled="!number || !name || !issueYear || error || invalidateIssueMonth || invalidateIssueDate || invalidatePaidMonth || invalidatePaidDate || !amountDue || disableButton"
+            :class="{ formValid: number && name && issueYear && !error && !invalidateIssueMonth && !invalidateIssueDate && !invalidatePaidMonth && !invalidatePaidDate && amountDue && !disableButton }"
+          >Save Changes</button>
+          <button
+            @click.prevent="discardChanges()"
+            :disabled="disableButton"
+            class="button completeButton block"
+            :class="{ warning: !disableButton }"
+          >Discard Changes</button>
+          <button
+            @click.prevent="deleteRecord()"
+            :disabled="disableButton"
+            class="button completeButton block pageBottom"
+            :class="{ danger: !disableButton }"
+          >Delete Invoice</button>
         </div>
       </form>
       <p
@@ -206,7 +228,7 @@
       >{{ successMessage.message }}</p>
       <p
         v-if="failureMessage"
-        class="responseMessage"
+        class="responseMessage error"
       >{{ failureMessage.error.message }}</p>
       <div class="label-input-pair">
         <button
@@ -244,7 +266,7 @@ export default {
       amountDue: "",
       convenienceFee: "",
       totalWithFee: "",
-      disableButton: "",
+      disableButton: false,
       successMessage: "",
       failureMessage: "",
       balance: "",
@@ -266,16 +288,18 @@ export default {
         })
         .then(json => {
           let issued = json.issued.split("-");
-          let paid = json.paid.split("-");
 
           this.name = json.name;
           this.issueYear = issued[0];
           this.issueMonth = issued[1];
           this.issueDate = issued[2].slice(0, 2);
-          this.paidYear = paid[0];
-          this.paidMonth = paid[1];
-          this.paidDate = paid[2].slice(0, 2);
-          if(this.paidYear && this.paidMonth && this.paidDate) {this.paid = true};
+          if(json.paid) {
+            let paid = json.paid.split("-");
+            this.paid = true
+            this.paidYear = paid[0];
+            this.paidMonth = paid[1];
+            this.paidDate = paid[2].slice(0, 2);
+          };
           this.amountDue = json.amount_due;
           this.balance = json.balance;
           this.convenienceFee = json.convenience_fee_if_cc;
@@ -291,7 +315,15 @@ export default {
         })
     },
     formatIssueMonth() {
-      if(this.issueMonth < 10 && (!this.issueMonth.toString().includes("0") || this.issueMonth.toString().length > 2)) {
+      if(this.issueMonth == NaN
+        || (this.issueMonth == 2 && this.issueYear % 4 == 0 && this.issueDate > 29)
+        || (this.issueMonth == 2 && this.issueYear % 4 != 0 && this.issueDate > 28)
+        || ((this.issueMonth == 3 || this.issueMonth == 4 || this.issueMonth == 6 || this.issueMonth == 9 || this.issueMonth == 11) && this.issueDate > 30)) {
+        this.invalidateIssueMonth = true;
+      } else {
+        this.invalidateIssueMonth = false;
+      };
+      if(this.issueMonth < 10 && (!this.issueMonth.toString().includes("0") && this.issueMonth || this.issueMonth.toString().length > 2)) {
         this.issueMonth = `0${parseInt(this.issueMonth)}`;
       };
       if(this.issueMonth < 1 || this.issueMonth > 12) {
@@ -299,33 +331,27 @@ export default {
       } else {
         this.invalidateIssueMonth = false;
       };
-      if((this.issueMonth == 2 && this.issueYear % 4 == 0 && this.issueDate > 29)
-        || (this.issueMonth == 2 && this.issueYear % 4 != 0 && this.issueDate > 28)
-        || ((this.issueMonth == 3 || this.issueMonth == 4 || this.issueMonth == 6 || this.issueMonth == 9 || this.issueMonth == 11) && this.issueDate > 30)) {
-        this.invalidateIssueDate = true;
-      } else {
-        this.invalidateIssueDate = false;
-      };
     },
     formatPaidMonth() {
-      if(this.issueMonth < 10 && (!this.issueMonth.toString().includes("0") || this.issueMonth.toString().length > 2)) {
-        this.issueMonth = `0${parseInt(this.issueMonth)}`;
+      if(this.paidMonth == NaN
+        || (this.paidMonth == 2 && this.paidYear % 4 == 0 && this.paidDate > 29)
+        || (this.paidMonth == 2 && this.paidYear % 4 != 0 && this.paidDate > 28)
+        || ((this.paidMonth == 3 || this.paidMonth == 4 || this.paidMonth == 6 || this.paidMonth == 9 || this.paidMonth == 11) && this.paidDate > 30)) {
+        this.invalidatePaidDate = true;
+      } else {
+        this.invalidatePaidDate = false;
+      };
+      if(this.paidMonth < 10 && (!this.paidMonth.toString().includes("0") && this.paidMonth || this.paidMonth.toString().length > 2)) {
+        this.paidMonth = `0${parseInt(this.paidMonth)}`;
       };
       if(this.paidMonth < 1 || this.paidMonth > 12) {
         this.invalidatePaidMonth = true;
       } else {
         this.invalidatePaidMonth = false;
       };
-      if((this.issueMonth == 2 && this.issueYear % 4 == 0 && this.issueDate > 29)
-        || (this.issueMonth == 2 && this.issueYear % 4 != 0 && this.issueDate > 28)
-        || ((this.issueMonth == 3 || this.issueMonth == 4 || this.issueMonth == 6 || this.issueMonth == 9 || this.issueMonth == 11) && this.issueDate > 30)) {
-        this.invalidateIssueDate = true;
-      } else {
-        this.invalidateIssueDate = false;
-      };
     },
     formatIssueDate() {
-      if(this.issueDate < 10) {
+      if(this.issueDate < 10 && (!this.issueDate.toString().includes("0")) && this.issueDate || this.issueDate.toString().length > 2) {
         this.issueDate = `0${this.issueDate}`;
       };
       if(this.issueDate < 1
@@ -339,7 +365,7 @@ export default {
       };
     },
     formatPaidDate() {
-      if(this.paidDate < 10) {
+      if(this.paidDate < 10 && (!this.paidDate.toString().includes("0")) && this.paidDate || this.paidDate.toString().length > 2) {
         this.paidDate = `0${this.paidDate}`;
       };
       if(this.paidDate < 1
@@ -354,6 +380,11 @@ export default {
     },
     togglePaid() {
       this.paid = !this.paid;
+      if(!this.paidMonth && !this.paidDate && !this.paidYear) {
+        this.paidMonth = new Date().getMonth() + 1;
+        this.paidDate = new Date().getDate();
+        this.paidYear = new Date().getFullYear();
+      }
     },
     formatAmountDue() {
       this.amountDue = parseFloat(this.amountDue).toFixed(2);
@@ -362,8 +393,8 @@ export default {
     },
     submitForm() {
       this.disableButton = true;
-      return fetch("http://localhost:3000/new-invoice", {
-        method: "POST",
+      return fetch(`http://localhost:3000/update-invoice/${this.number}`, {
+        method: "PUT",
         body: JSON.stringify({
           invoiceId: this.number,
           name: this.name,
@@ -379,6 +410,7 @@ export default {
         })
       })
         .then(res => {
+          console.log(res)
           if(res.status < 400) {
             return res.json()
           } else {
@@ -392,6 +424,55 @@ export default {
         .catch(err => {
           this.failureMessage = err;
         })
+    },
+    discardChanges() {
+      if(confirm("Are you sure you want to discard changes?")) {
+        this.loadInvoiceForm = false,
+        this.error = "",
+        this.errorMessage = "",
+
+        this.number = "",
+        this.name = "",
+        this.issueMonth = "",
+        this.invalidateIssueMonth = "",
+        this.issueDate = "",
+        this.invalidateIssueDate = "",
+        this.issueYear = "",
+        this.paid = "",
+        this.paidMonth = "",
+        this.invalidatePaidMonth = "",
+        this.paidDate = "",
+        this.invalidatePaidDate = "",
+        this.paidYear = "",
+        this.amountDue = "",
+        this.convenienceFee = "",
+        this.totalWithFee = "",
+        this.disableButton = false,
+        this.successMessage = "",
+        this.failureMessage = "",
+        this.balance = ""
+      }
+    },
+    deleteRecord() {
+      if(this.paid) {alert("Cannot delete invoices that have already been paid.")}
+      if(!this.paid && confirm("Are you sure you want to permanently delete this invoice?")) {
+        return fetch(`http://localhost:3000/delete-invoice/${this.number}`, {method: "DELETE"})
+          .then(res => {
+            console.log(res)
+            if(res.status < 400) {
+              return res.json()
+            } else {
+              return res.json()
+                .then(error => {throw error})
+            }
+          })
+          .then(json => {
+            this.successMessage = json;
+          })
+          .catch(err => {
+            this.failureMessage = err;
+          })
+      }
     },
     refreshForm() {
       this.number = "";
@@ -497,10 +578,28 @@ button {
   background-color: #32a973;
   cursor: pointer;
 }
+.warning {
+  background-color: #fc6d35;
+  color: white;
+}
+.warning:hover {
+  background-color: #eb5c24;
+  color: #eeeeee;
+  cursor: pointer;
+}
+.danger {
+  background-color: #ff0000;
+  color: white;
+}
+.danger:hover {
+  background-color: #ee0000;
+  color: white;
+  cursor: pointer;
+}
 /* #loadInvoice {
   border-bottom: 2px solid black;
 } */
-@media(max-width: 500px) {
+@media(max-width: 520px) {
   label, .responseMessage {
     font-size: 4vw;
   }
@@ -514,16 +613,26 @@ button {
   input[type="checkbox"] {
     transform: scale(1)
   }
-  button {
+  .block {
+    margin: auto;
+  }
+  .button {
     height: 6vw;
     font-size: 4vw;
     margin-top: 20px;
   }
-  .block {
-    margin: auto;
+  .completeButton {
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+  .formValid {
+    margin-top: 15px;
+  }
+  .pageBottom {
+    margin-bottom: 15px;
   }
 }
-@media(min-width: 501px) {
+@media(min-width: 521px) {
   .label-input-pair {
     display: flex;
     justify-content: space-between;
@@ -535,6 +644,9 @@ button {
     padding: 0 20px
   }
   button {
+    width: 32%;
+  }
+  #loadInvoice {
     width: 100%;
   }
   label {
@@ -551,7 +663,7 @@ button {
     align-items: flex-start;
   }
 }
-@media(min-width: 750px) {
+@media(min-width: 878px) {
   label, .responseMessage {
     font-size: 25px;
   }
