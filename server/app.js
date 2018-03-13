@@ -150,6 +150,23 @@ app.delete("/delete-invoice/:id", (req, res) => {
         })
 })
 
+app.get("/search", (req, res) => {
+    console.log(req.query)
+    queries.search(req.query)
+        .then(records => {
+            res.status(200);
+            res.json(records)
+        })
+        .catch(() => {
+            res.status(404);
+            res.json({
+                error: {
+                    message: `No invoice records found.`
+                }
+            })
+        })
+})
+
 app.listen(port, () => {
     console.log(`App listening on port ${port}`)
 })

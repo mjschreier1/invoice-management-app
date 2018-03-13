@@ -5,6 +5,13 @@
       <p>Type "2018" in the "Issue Year" field and "03" in the "Issue Month" field to return all invoices issued in March 2018.</p>
     </div>
     <form>
+      <label for="searchType">Search By:</label>
+      <select
+        name="searchType"
+        v-model="searchType"
+      ></select>
+    </form>
+    <form>
       <div class="label-input-pair">
         <label
           for="invoiceId"
@@ -223,7 +230,7 @@ export default {
     findInvoices() {
       let params = Object.keys(this.query).reduce((acc, curr) => {
         if(curr !== "indicators") {
-          if(curr) {
+          if(this.query[curr]) {
             if(acc) {
               acc += "&"
             }
@@ -231,8 +238,18 @@ export default {
           }
         }
         return acc;
-      }, "");
+      }, "").concat(Object.keys(this.query.indicators).reduce((acc, curr) => {
+        if(this.query.amount_due && curr === "amountComparison") {
+          acc += `&indicators[amountComparison]=${this.query.indicators[curr]}`
+        }
+        if(this.query.balance && curr === "balanceComparison") {
+          acc += `indicators[balanceComparison]=${this.query.indicators[curr]}`
+        }
+        return acc;
+      }, `&indicators[paidStatus]=${this.query.indicators.paidStatus}`));
       return fetch(`http://localhost:3000/search?${params}`)
+        .then(res => res.json())
+        .then(json => console.log(json))
     },
     formatIssueMonth() {
       if(this.query.issueMonth === "") {
@@ -312,7 +329,7 @@ export default {
         } else {
           this.invalidatePaidDate = false;
         };
-      }
+     }
     },
   }
 }
