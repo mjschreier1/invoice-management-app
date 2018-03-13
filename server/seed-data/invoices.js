@@ -35,7 +35,7 @@ let data = [
     issued: "2018-01-31",
     paid: "2018-01-31",
     amount_due: 200,
-    balance: 100
+    balance: 0
   },
   {
     id: 1006,

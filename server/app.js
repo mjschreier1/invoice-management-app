@@ -167,6 +167,86 @@ app.get("/search", (req, res) => {
         })
 })
 
+app.get("/search/id/:id", (req, res) => {
+    queries.getInvoice(req.params.id)
+        .then(records => {
+            res.status(200);
+            res.json(records)
+        })
+        .catch(() => {
+            res.status(404);
+            res.json({
+                error: {
+                    message: `No invoice records found.`
+                }
+            })
+        })
+})
+
+app.get("/search/name/:name", (req, res) => {
+    queries.searchByName(req.params.name)
+        .then(records => {
+            res.status(200);
+            res.json(records)
+        })
+        .catch(() => {
+            res.status(404);
+            res.json({
+                error: {
+                    message: `No invoice records found.`
+                }
+            })
+        })
+})
+
+app.get("/search/year/:year", (req, res) => {
+    queries.searchByYear(req.params.year)
+        .then(records => {
+            res.status(200);
+            res.json(records)
+        })
+        .catch(() => {
+            res.status(404);
+            res.json({
+                error: {
+                    message: `No invoice records found.`
+                }
+            })
+        })
+})
+
+app.get("/search/month/:year/:month", (req, res) => {
+    queries.searchByMonth(req.params.year, req.params.month)
+        .then(records => {
+            res.status(200);
+            res.json(records)
+        })
+        .catch(() => {
+            res.status(404);
+            res.json({
+                error: {
+                    message: `No invoice records found.`
+                }
+            })
+        })
+})
+
+app.get("/search/unpaid", (req, res) => {
+    queries.getUnpaid()
+        .then(records => {
+            res.status(200);
+            res.json(records)
+        })
+        .catch(() => {
+            res.status(404);
+            res.json({
+                error: {
+                    message: `No invoice records found.`
+                }
+            })
+        })
+})
+
 app.listen(port, () => {
     console.log(`App listening on port ${port}`)
 })

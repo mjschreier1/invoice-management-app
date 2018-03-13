@@ -317,6 +317,11 @@ export default {
           this.totalWithFee = json.grand_total_if_cc;
         })
         .then(() => {
+          this.formatIssueMonth();
+          this.formatPaidMonth();
+          this.formatIssueDate();
+          this.formatPaidDate();
+          this.formatAmountDue();
           this.loadInvoiceForm = true;
         })
         .catch(err => {
@@ -334,7 +339,7 @@ export default {
       } else {
         this.invalidateIssueMonth = false;
       };
-      if(this.issueMonth < 10 && (!this.issueMonth.toString().includes("0") && this.issueMonth || this.issueMonth.toString().length > 2)) {
+      if(this.issueMonth < 10 && (!this.issueMonth.toString().includes("0") && this.issueMonth || this.issueMonth.toString().length != 2)) {
         this.issueMonth = `0${parseInt(this.issueMonth)}`;
       };
       if(this.issueMonth < 1 || this.issueMonth > 12) {
@@ -352,7 +357,7 @@ export default {
       } else {
         this.invalidatePaidDate = false;
       };
-      if(this.paidMonth < 10 && (!this.paidMonth.toString().includes("0") && this.paidMonth || this.paidMonth.toString().length > 2)) {
+      if(this.paidMonth < 10 && (!this.paidMonth.toString().includes("0") && this.paidMonth || this.paidMonth.toString().length != 2)) {
         this.paidMonth = `0${parseInt(this.paidMonth)}`;
       };
       if(this.paidMonth < 1 || this.paidMonth > 12) {
@@ -365,7 +370,7 @@ export default {
       if(this.issueDate < 10 && (!this.issueDate.toString().includes("0")) && this.issueDate || this.issueDate.toString().length > 2) {
         this.issueDate = `0${this.issueDate}`;
       };
-      if(this.issueDate < 1
+      if(this.issueDate < 1 && this.issueDate
         || this.issueDate > 31
         || (this.issueMonth === 2 && this.issueYear % 4 === 0 && this.issueDate > 29)
         || (this.issueMonth === 2 && this.issueYear % 4 !== 0 && this.issueDate > 28)
@@ -379,7 +384,7 @@ export default {
       if(this.paidDate < 10 && (!this.paidDate.toString().includes("0")) && this.paidDate || this.paidDate.toString().length > 2) {
         this.paidDate = `0${this.paidDate}`;
       };
-      if(this.paidDate < 1
+      if(this.paidDate < 1 && this.paidDate
         || this.paidDate > 31
         || (this.paidMonth === 2 && this.paidYear % 4 === 0 && this.paidDate > 29)
         || (this.paidMonth === 2 && this.paidYear % 4 !== 0 && this.paidDate > 28)
