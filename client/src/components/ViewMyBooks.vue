@@ -88,6 +88,48 @@
         >Find Invoices</button>
       </div>
     </form>
+    <ul
+      id="results"
+      v-if="results[0]"
+    >
+      <li v-for="record of results" v-bind:key="record">
+        <div class="record">
+          <div class="label-record-pair">
+            <p>Invoice Number:</p>
+            <p>{{record.id}}</p>
+          </div>
+          <div class="label-record-pair">
+            <p>Last Name or Organization Name:</p>
+            <p>{{record.name}}</p>
+          </div>
+          <div class="label-record-pair">
+            <p>Issued:</p>
+            <p>{{record.issued.split("-")[1]}}/{{record.issued.split("-")[2].slice(0, 2)}}/{{record.issued.split("-")[0]}}</p>
+          </div>
+          <div class="label-record-pair">
+            <p>Amount Due:</p>
+            <p>${{record.amount_due.toFixed(2)}}</p>
+          </div>
+          <div class="label-record-pair">
+            <p>Stripe Convenience Fee if Credit Card:</p>
+            <p>${{record.convenience_fee_if_cc.toFixed(2)}}</p>
+          </div>
+          <div class="label-record-pair">
+            <p>Grand Total if Credit Card:</p>
+            <p>${{record.grand_total_if_cc.toFixed(2)}}</p>
+          </div>
+          <div class="label-record-pair">
+            <p>Payment Status:</p>
+            <p v-if="record.paid">{{record.paid.split("-")[1]}}/{{record.paid.split("-")[2].slice(0, 2)}}/{{record.paid.split("-")[0]}}</p>
+            <p v-if="!record.paid">unpaid</p>
+          </div>
+          <div class="label-record-pair margin-bottom">
+            <p>Balance:</p>
+            <p>${{record.balance.toFixed(2)}}</p>
+          </div>
+        </div>
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -107,6 +149,8 @@ export default {
       showYear: false,
       showMonth: false,
       formValid: false,
+      results: [],
+      errorMessage: ""
     }
   },
 
@@ -120,10 +164,23 @@ export default {
 
   methods: {
     findInvoices() {
+      this.errorMessage = "";
+      this.results = [];
       return fetch(`http://localhost:3000/search/${this.searchType}/${this.formatQuery()}`)
-        .then(res => res.json())
-        .then(json => console.log(json))
-        .catch(err => console.log(err))
+        .then(res => {
+          if(res.status < 400) {
+            return res.json()
+          } else {
+            return res.json()
+              .then(err => {throw err})
+          }
+        })
+        .then(json => {
+          this.results = json
+        })
+        .catch(err => {
+          this.errorMessage = err.error.message
+        })
     },
     formatQuery() {
       if(this.searchType === "id") { return this.id }
@@ -239,7 +296,27 @@ select {
   font-size: 3vw;
   margin: auto;
 }
-@media(max-width: 500px) {
+ul {
+  list-style: none;
+  padding: 0;
+}
+.record {
+  background-color: #00b26b;
+  border: solid 1px black;
+  color: white;
+  margin: auto;
+  margin-bottom: 10px;
+}
+p {
+  margin: 0;
+}
+.label-record-pair {
+  margin-top: 10px;
+}
+.margin-bottom {
+  margin-bottom: 10px;
+}
+@media(max-width: 505px) {
   label, .responseMessage {
     font-size: 4vw;
   }
@@ -262,8 +339,16 @@ select {
   select {
     background-color: white;
   }
+  .record {
+    width: 90%;
+  }
 }
-@media(min-width: 501px) {
+@media(min-width: 506px) {
+  .label-record-pair {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+  }
   .label-input-pair {
     display: flex;
     justify-content: space-between;
@@ -293,6 +378,9 @@ select {
   .instructions {
     font-size: 2.25vw;
   }
+  ul {
+    padding: 0 10px;
+  }
 }
 @media(min-width: 750px) {
   label, .responseMessage {
@@ -311,6 +399,14 @@ select {
   }
   .instructions {
     font-size: 16px;
+  }
+  #results {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+  .label-record-pair {
+    width: 28em;
   }
 }
 @media(min-width: 1500px) {

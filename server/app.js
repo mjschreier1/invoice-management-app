@@ -168,7 +168,7 @@ app.get("/search", (req, res) => {
 })
 
 app.get("/search/id/:id", (req, res) => {
-    queries.getInvoice(req.params.id)
+    queries.searchById(req.params.id)
         .then(records => {
             res.status(200);
             res.json(records)

@@ -75,8 +75,12 @@ module.exports = {
             .del();
     },
 
+    searchById(id) {
+        return database.select("*").from("invoices").where("id", id)
+    },
+
     searchByName(name) {
-        return database.select("*").from("invoices").where("name", name).first()
+        return database.select("*").from("invoices").where("name", name)
     },
 
     searchByYear(year) {
