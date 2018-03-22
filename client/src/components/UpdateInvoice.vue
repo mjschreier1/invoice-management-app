@@ -327,7 +327,7 @@ export default {
         .catch(err => {
           this.error = true;
           this.errorMessage = err.error.message;
-          console.log(err)
+          console.error(err)
         })
     },
     formatIssueMonth() {
@@ -427,7 +427,6 @@ export default {
         })
       })
         .then(res => {
-          console.log(res)
           if(res.status < 400) {
             return res.json()
           } else {
@@ -484,7 +483,6 @@ export default {
       if(!this.paid && confirm("Are you sure you want to permanently delete this invoice?")) {
         return fetch(`http://localhost:3000/delete-invoice/${this.number}`, {method: "DELETE"})
           .then(res => {
-            console.log(res)
             if(res.status < 400) {
               return res.json()
             } else {

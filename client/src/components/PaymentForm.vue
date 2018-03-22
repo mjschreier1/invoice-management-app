@@ -25,7 +25,7 @@
         :class="{ disabledButton: disableInvoiceLookup }"
       >Get My Invoice</button>
     </div>
-    <p v-if="apiDataExists">Invoice {{ apiData.id }} has a ${{ apiData.balance.toFixed(2) }} balance. {{ apiData.balance === 0 ? "Did you mean to look up a different invoice?" : "" }}</p>
+    <p v-if="apiDataExists">Invoice {{ apiData.id }} has a ${{ apiData.balance.toFixed(2) }} balance. {{ apiData.balance === 0 ? "Did you mean to look up a different invoice?" : `A credit card payment will include a $${apiData.convenience_fee_if_cc} convenience fee, bringing the grand total to ${apiData.grand_total_if_cc}` }}.</p>
     <p v-if="errorExists">{{ error }}</p>
     <card class="stripe-card"
       ref="card"
@@ -41,7 +41,7 @@
         :disabled="disablePayment"
         :class="{ hide: disablePayment }"
         @click.prevent="pay()"
-      >Charge Card {{ apiSuccess ? `for $${apiData.balance.toFixed(2)}` : "" }}</button>
+      >Charge Card {{ apiSuccess ? `for $${apiData.grand_total_if_cc.toFixed(2)}` : "" }}</button>
     </div>
     <p v-if="chargeResponse">{{ chargeResponse.message }}</p>
     <p v-if="chargeResponse.message === 'Transaction successful!'">Card charged for ${{ chargeResponse.amount }}.</p>
@@ -124,9 +124,7 @@ export default {
             this.showCard = true;
           }
         })
-        .then(() => console.log(this.apiData))
         .catch(error => {
-          console.log(error)
           this.error = error.error.message || error;
           this.errorExists = true;
         })
@@ -139,12 +137,12 @@ export default {
       // See https://stripe.com/docs/api#errors for the error object.
       // More general https://stripe.com/docs/stripe.js#stripe-create-token.
       createToken()
-        .then(data => {console.log(data.token.id); return data.token.id})
+        .then(data => data.token.id)
         .then(token => {
           return fetch(`http://localhost:3000/charge`, {
             method: "POST",
             body: JSON.stringify({
-              amount: this.apiData.balance.toFixed(2),
+              amount: this.apiData.grand_total_if_cc.toFixed(2),
               stripeToken: token,
               invoiceId: this.invoiceId,
               name: this.name

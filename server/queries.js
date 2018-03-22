@@ -1,7 +1,7 @@
 const database = require("./database-connection");
 let currentDate;
 const setDate = () => {
-    currentDate = `${new Date().getUTCFullYear()}-${new Date().getUTCMonth()}-${new Date().getUTCDate()}`;
+    currentDate = `${new Date().getUTCFullYear()}-${new Date().getUTCMonth() + 1}-${new Date().getUTCDate()}`;
 };
 const getYear = (date) => {
     return date.getUTCFullYear();

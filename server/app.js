@@ -26,8 +26,6 @@ app.get("/invoice/:id/:name", (req, res) => {
 });
 
 app.post("/charge", (req, res) => {
-    console.log(req.body);
-    
     const token = req.body.stripeToken;
     const chargeCard = (chargeObject) => {
       return new Promise((resolve, reject) => {
@@ -38,13 +36,12 @@ app.post("/charge", (req, res) => {
     };
 
     chargeCard({ 
-        amount: req.body.amount * 100, 
+        amount: Math.floor(req.body.amount * 100), 
         currency: "usd", 
         description: "Invoice payment", 
         source: token 
     })
         .then(transaction => {
-            console.log(transaction);
             queries.processPayment(req.body)
                 .then(star => {
                     res.status(200);
@@ -77,7 +74,6 @@ app.get("/next-invoice", (req, res) => {
 })
 
 app.post("/new-invoice", (req, res) => {
-    console.log(req.body)
     queries.addNewInvoice(req.body)
         .then(id => {
             res.status(201);
@@ -96,7 +92,6 @@ app.post("/new-invoice", (req, res) => {
 })
 
 app.get("/get-invoice/:id", (req, res) => {
-    console.log("Request received", req.params.id)
     queries.getInvoice(req.params.id)
         .then(record => {
             res.status(200);
@@ -113,7 +108,6 @@ app.get("/get-invoice/:id", (req, res) => {
 })
 
 app.put("/update-invoice/:id", (req, res) => {
-    console.log("Request received", req.params.id, req.body)
     queries.updateRecord(req.body)
         .then(id => {
             res.status(200);
@@ -132,7 +126,6 @@ app.put("/update-invoice/:id", (req, res) => {
 })
 
 app.delete("/delete-invoice/:id", (req, res) => {
-    console.log("deleting", req.params.id)
     queries.deleteRecord(req.params.id)
         .then(() => {
             res.status(200);
@@ -151,7 +144,6 @@ app.delete("/delete-invoice/:id", (req, res) => {
 })
 
 app.get("/search", (req, res) => {
-    console.log(req.query)
     queries.search(req.query)
         .then(records => {
             res.status(200);

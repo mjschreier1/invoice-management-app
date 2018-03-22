@@ -92,7 +92,7 @@
       id="results"
       v-if="results[0]"
     >
-      <li v-for="record of results" v-bind:key="record">
+      <li v-for="record of results" :key="record.i">
         <div class="record">
           <div class="label-record-pair">
             <p>Invoice Number:</p>
