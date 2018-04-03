@@ -1,6 +1,7 @@
 ## See the app demo live!
-Visit https://invoice-management-app.surge.sh/#/ for the client view.
-Visit https://invoice-management-app.surge.sh/#/dashboard for the admin view.
+* Visit https://invoice-management-app.surge.sh/#/ for the client view.
+* Visit https://invoice-management-app.surge.sh/#/dashboard for the admin view.
+To try it out, Stripe's test credit card is 4242 4242 4242 4242 with any future expiry date and any three-digit CVC.
 
 ## The Pitch
 My fiance is a professional conductor, pianist, and teacher. In addition to being a full-time faculty member at Colorado State University, he does a TON of independent contract work, with a few orchestral conducting appointments, teaching piano lessons, and performing other miscellaneous theatre engagements. As a professional that does his volume of contract work, settling his books at various intervals is always a massive headache. That's where Clientelements (working title) comes in. Clientelements is an invoice management system that keeps records centralized for independent contractors. It saves clients the hassle of having to find the checkbook, envelopes, and stamps, while providing the peace of mind of Stripe's secure credit card processing service.
