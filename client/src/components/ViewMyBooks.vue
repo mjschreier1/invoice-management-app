@@ -144,10 +144,25 @@
         </div>
       </li>
     </ul>
-    <div class="record">
+    <div
+      class="record"
+      v-if="summary[0]"
+    >
       <div class="label-record-pair">
-        <p>Invoice Number:</p>
-        <p>{{record.id}}</p>
+        <p>Term:</p>
+        <p>{{ term === "annual" ? summary[0].year : `${summary[0].month}/${summary[0].year}` }}</p>
+      </div>
+      <div class="label-record-pair">
+        <p>Net Revenue (excluding Stripe fees):</p>
+        <p>${{ (summary.reduce((acc, record) => { acc += record.net_revenue; return Math.floor(acc * 100) / 100 }, 0)).toFixed(2) }}</p>
+      </div>
+      <div class="label-record-pair">
+        <p>Unpaid Balances:</p>
+        <p>${{ (summary.reduce((acc, record) => acc += record.unpaid_balance, 0)).toFixed(2) }}</p>
+      </div>
+      <div class="label-record-pair">
+        <p>Total Billed:</p>
+        <p>${{ (summary.reduce((acc, record) => { acc += (record.net_revenue + record.unpaid_balance); return Math.floor(acc * 100) / 100 }, 0)).toFixed(2) }}</p>
       </div>
     </div>
     <p v-if="errorMessage">Whoops, something went wrong!</p>
@@ -176,7 +191,8 @@ export default {
       summary: [],
       errorMessage: "",
       invoiceQuery: true,
-      queried: false
+      queried: false,
+      term: ""
     }
   },
 
@@ -213,8 +229,14 @@ export default {
     formatQuery() {
       if(this.searchType === "id") { return this.id }
       else if(this.searchType === "name") { return this.name}
-      else if(this.searchType === "year" || this.searchType === "annually") { return this.year }
-      else if(this.searchType === "month" || this.searchType === "monthly") { return `${this.year}/${this.month}` }
+      else if(this.searchType === "year" || this.searchType === "annually") {
+        this.term = "annual";
+        return this.year;
+      }
+      else if(this.searchType === "month" || this.searchType === "monthly") {
+        this.term = "monthly";
+        return `${this.year}/${this.month}`;
+      }
       else { return "" }
     },
     changeQuery() {
