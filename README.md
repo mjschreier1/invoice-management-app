@@ -1,6 +1,7 @@
 ## See the app demo live!
 * Visit https://invoice-management-app.surge.sh/#/ for the client view.
 * Visit https://invoice-management-app.surge.sh/#/dashboard for the admin view.
+
 To try it out, Stripe's test credit card is 4242 4242 4242 4242 with any future expiry date and any three-digit CVC.
 
 ## The Pitch
