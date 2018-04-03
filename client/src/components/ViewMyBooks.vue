@@ -9,11 +9,13 @@
             v-model="searchType"
             @change="changeQuery()"
           >
-            <option value="id">Invoice Number</option>
-            <option value="name">Last Name or Organization Name</option>
-            <option value="year">Year</option>
-            <option value="month">Year and Month</option>
-            <option value="unpaid">Unpaid Invoices</option>
+            <option value="id">Invoices by Number</option>
+            <option value="name">Invoices by Last Name or Organization Name</option>
+            <option value="year">Invoices by Year</option>
+            <option value="month">Invoices by Year and Month</option>
+            <option value="unpaid">Invoices Unpaid</option>
+            <option value="annually">Summary by Year</option>
+            <option value="monthly">Summary by Year and Month</option>
           </select>
         </div>
       </div>
@@ -52,14 +54,20 @@
         v-if="showYear"
       >
         <label
-          for="issueYear"
+          for="Year"
           class="block"
+          v-if="invoiceQuery"
         >Year Issued</label>
+        <label
+          for="summaryYear"
+          class="block"
+          v-if="!invoiceQuery"
+        >Year</label>
         <input
           type="number"
-          name="issueYear"
+          name="Year"
           class="block four-digit"
-          v-model="issueYear"
+          v-model="Year"
         />
       </div>
       <div
@@ -67,17 +75,23 @@
         v-if="showMonth"
       >
         <label
-          for="issueMonth"
+          for="Month"
           class="block"
+          v-if="invoiceQuery"
         >Month Issued</label>
+        <label
+          for="summaryMonth"
+          class="block"
+          v-if="!invoiceQuery"
+        >Month</label>
         <input
           type="number"
-          name="issueMonth"
+          name="Month"
           class="block two-digit"
-          v-model="issueMonth"
-          @change="formatIssueMonth()"
-          @blur="formatIssueMonth()"
-          :class="{ invalidEntry: invalidateIssueMonth }"
+          v-model="Month"
+          @change="formatMonth()"
+          @blur="formatMonth()"
+          :class="{ invalidEntry: invalidateMonth }"
         />
       </div>
       <div class="label-input-pair">
@@ -130,6 +144,9 @@
         </div>
       </li>
     </ul>
+    <p v-if="errorMessage">Whoops, something went wrong!</p>
+    <p v-if="errorMessage">{{ errorMessage }}</p>
+    <p v-if="!results[0] && queried && !errorMessage">Could not find any matching records.</p>
   </div>
 </template>
 
@@ -140,9 +157,9 @@ export default {
     return {
       id: "",
       name: "",
-      issueYear: "",
-      issueMonth: "",
-      invalidateIssueMonth: false,
+      Year: "",
+      Month: "",
+      invalidateMonth: false,
       searchType: "id",
       showNumber: true,
       showName: false,
@@ -150,15 +167,17 @@ export default {
       showMonth: false,
       formValid: false,
       results: [],
-      errorMessage: ""
+      errorMessage: "",
+      invoiceQuery: true,
+      queried: false
     }
   },
 
   computed: {
     formIsValid() {
       if(this.searchType === "unpaid") { return true }
-      if(this.searchType !== "month") { return this.id > 0 || this.name !== "" || this.issueYear > 0 }
-      else { return this.issueYear > 0 && this.issueMonth > 0 }
+      if(this.searchType !== "month") { return this.id > 0 || this.name !== "" || this.Year > 0 }
+      else { return this.Year > 0 && this.Month > 0 }
     },
   },
 
@@ -176,17 +195,18 @@ export default {
           }
         })
         .then(json => {
-          this.results = json
+          this.results = json;
+          this.queried = true;
         })
         .catch(err => {
-          this.errorMessage = err.error.message
+          err.error ? this.errorMessage = err.error.message : this.errorMessage = "No additional information available for this error."
         })
     },
     formatQuery() {
       if(this.searchType === "id") { return this.id }
       else if(this.searchType === "name") { return this.name}
-      else if(this.searchType === "year") { return this.issueYear }
-      else if(this.searchType === "month") { return `${this.issueYear}/${this.issueMonth}` }
+      else if(this.searchType === "year") { return this.Year }
+      else if(this.searchType === "month") { return `${this.Year}/${this.Month}` }
       else { return "" }
     },
     changeQuery() {
@@ -197,25 +217,33 @@ export default {
 
       this.name = "";
       this.id = "";
-      this.issueYear = "";
-      this.issueMonth = "";
+      this.Year = "";
+      this.Month = "";
 
-      if(this.searchType === "id") { this.showNumber = true };
-      if(this.searchType === "name") { this.showName = true };
-      if(this.searchType === "year") { this.showYear = true };
-      if(this.searchType === "month") { this.showYear = true; this.showMonth = true };
-    },
-    formatIssueMonth() {
-      if(this.issueMonth === "") {
-        this.invalidateIssueMonth = false;
+      if(this.searchType === "annually" || this.searchType === "monthly") {
+        this.invoiceQuery = false;
+        if(this.searchType === "annually") { this.showYear = true };
+        if(this.searchType === "monthly") { this.showYear = true; this.showMonth = true };
       } else {
-        if(this.issueMonth < 10 && (!this.issueMonth.toString().includes("0") && this.issueMonth || this.issueMonth.toString().length > 2)) {
-          this.issueMonth = `0${parseInt(this.issueMonth)}`;
+        this.invoiceQuery = true;
+        if(this.searchType === "id") { this.showNumber = true };
+        if(this.searchType === "name") { this.showName = true };
+        if(this.searchType === "year") { this.showYear = true };
+        if(this.searchType === "month") { this.showYear = true; this.showMonth = true };
+      }
+
+    },
+    formatMonth() {
+      if(this.Month === "") {
+        this.invalidateMonth = false;
+      } else {
+        if(this.Month < 10 && (!this.Month.toString().includes("0") && this.Month || this.Month.toString().length > 2)) {
+          this.Month = `0${parseInt(this.Month)}`;
         };
-        if(this.issueMonth < 1 || this.issueMonth > 12) {
-          this.invalidateIssueMonth = true;
+        if(this.Month < 1 || this.Month > 12) {
+          this.invalidateMonth = true;
         } else {
-          this.invalidateIssueMonth = false;
+          this.invalidateMonth = false;
         };
       }
     },
