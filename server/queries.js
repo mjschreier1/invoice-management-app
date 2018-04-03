@@ -99,5 +99,13 @@ module.exports = {
     getUnpaid() {
         console.log("unpaid")
         return database.select("*").from("invoices").where("balance", ">", 0)
+    },
+
+    getAnnualRecord(year) {
+        return database.select("*").from("summary").where("year", year)
+    },
+
+    getMonthlyRecord(year, month) {
+        console.log(year, month)
     }
 }

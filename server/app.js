@@ -239,6 +239,42 @@ app.get("/search/unpaid", (req, res) => {
         })
 })
 
+app.get("/search/annually/:year", (req, res) => {
+    queries.getAnnualRecord(req.params.year)
+        .then(record => {
+            if(record[0]) {
+                res.status(200);
+                res.json(record);
+            } else {
+                reject();
+            }
+        })
+        .catch(() => {
+            res.status(404);
+            res.json({
+                error: {
+                    message: `No records found for ${req.params.year}`
+                }
+            })
+        })
+})
+
+app.get("/search/monthly/:year/:month", (req, res) => {
+    queries.getMonthlyRecord(req.params.year, req.params.month)
+        .then(record => {
+            res.status(200);
+            res.json(record)
+        })
+        .catch(() => {
+            res.status(404);
+            res.json({
+                error: {
+                    message: `No records found for ${req.params.month}/${req.params.year}`
+                }
+            })
+        })
+})
+
 app.listen(port, () => {
     console.log(`App listening on port ${port}`)
 })
