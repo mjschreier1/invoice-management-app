@@ -262,8 +262,12 @@ app.get("/search/annually/:year", (req, res) => {
 app.get("/search/monthly/:year/:month", (req, res) => {
     queries.getMonthlyRecord(req.params.year, req.params.month)
         .then(record => {
-            res.status(200);
-            res.json(record)
+            if(record[0]) {
+                res.status(200);
+                res.json(record);
+            } else {
+                reject();
+            }
         })
         .catch(() => {
             res.status(404);

@@ -85,14 +85,12 @@ export default {
       chargeResponse: "",
       showCard: false,
       paymentSuccessful: false,
-      // hideButton: true,
     }
   },
 
   components: { Card },
 
   mounted() {
-    // this.updateCard();
     window.addEventListener("resize", (event) => {
       if(document.querySelector(".StripeElement").classList.contains("StripeElement--empty")) {
         this.updateCard()
@@ -143,9 +141,12 @@ export default {
             method: "POST",
             body: JSON.stringify({
               amount: this.apiData.grand_total_if_cc.toFixed(2),
+              balance: this.apiData.amount_due,
               stripeToken: token,
               invoiceId: this.invoiceId,
-              name: this.name
+              name: this.name,
+              month: new Date(this.apiData.issued).getUTCMonth() + 1,
+              year: new Date(this.apiData.issued).getUTCFullYear()
             }),
             headers: new Headers({
               "Content-Type": "application/json"

@@ -1,17 +1,51 @@
 const database = require("./database-connection");
 let currentDate;
+let summaryRecord;
 const setDate = () => {
     currentDate = `${new Date().getUTCFullYear()}-${new Date().getUTCMonth() + 1}-${new Date().getUTCDate()}`;
 };
 const getYear = (date) => {
     return date.getUTCFullYear();
-}
+};
 const getMonth = (date) => {
     return date.getMonth();
-}
+};
 const getDate = (date) => {
     return date.getDate();
-}
+};
+const getSummary = (transaction) => {
+    console.log(`3. or 6. gettingSummary`)
+    return database("summary").where("month", transaction.month).andWhere("year", transaction.year).first()
+    // console.log(transaction);
+    // console.log(summaryRecord);
+    // return summaryRecord
+        // .then(record => { summaryRecord = record; return record })
+        // .update({
+        //     gross_revenue: summaryRecord.gross_revenue - transaction.amount,
+        //     total_fees: summaryRecord.total_fees + transaction.amount - transaction.balance,
+        //     net_revenue: summaryRecord.net_revenue + transaction.balance,
+        //     unpaid_balance: summaryRecord.unpaid_balance - transaction.balance
+        // })
+};
+const setSummary = (record) => {
+    console.log(`3 1/2. setSummary function called`)
+    summaryRecord = record;
+    console.log(`4. setSummary summaryRecord = `, summaryRecord.unpaid_balance, summaryRecord.gross_revenue, summaryRecord.total_fees, summaryRecord.net_revenue)
+};
+const updateSummary = (transaction) => {
+    console.log(`2. updateSummary transaction = `, transaction)
+    getSummary(transaction)
+        .then(record => { console.log(`3 1/4. .then called with `, record); setSummary(record) })
+        .then(() => {
+            console.log(`5. updatingSummary with summaryRecord`)
+            getSummary(transaction).update({
+                gross_revenue: summaryRecord.gross_revenue - transaction.amount,
+                total_fees: summaryRecord.total_fees + transaction.amount - transaction.balance,
+                net_revenue: summaryRecord.net_revenue + transaction.balance,
+                unpaid_balance: summaryRecord.unpaid_balance - transaction.balance
+            })
+        })
+};
 
 
 module.exports = {
@@ -22,12 +56,18 @@ module.exports = {
     },
 
     processPayment(transaction) {
+        console.log(transaction)
+        console.log(`1. processPayment transaction = `, transaction)
         setDate();
-        return database("invoices").where("id", transaction.invoiceId)
-            .update({
-                paid: currentDate,
-                balance: 0
-            }, "*")
+        updateSummary(transaction)
+            .then(() => {
+                console.log("7. updating transaction record")
+                return database("invoices").where("id", transaction.invoiceId)
+                    .update({
+                        paid: currentDate,
+                        balance: 0
+                    }, "*")
+            })
     },
 
     findNextInvoiceId() {
@@ -106,6 +146,6 @@ module.exports = {
     },
 
     getMonthlyRecord(year, month) {
-        console.log(year, month)
+        return database.select("*").from("summary").where("year", year).andWhere("month", month)
     }
 }

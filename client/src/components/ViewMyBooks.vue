@@ -103,7 +103,7 @@
       </div>
     </form>
     <ul
-      id="results"
+      class="results"
       v-if="results[0]"
     >
       <li v-for="record of results" :key="record.i">
@@ -144,6 +144,7 @@
         </div>
       </li>
     </ul>
+    <div class="results">
     <div
       class="record"
       v-if="summary[0]"
@@ -162,12 +163,15 @@
       </div>
       <div class="label-record-pair">
         <p>Total Billed:</p>
-        <p>${{ (summary.reduce((acc, record) => { acc += (record.net_revenue + record.unpaid_balance); return Math.floor(acc * 100) / 100 }, 0)).toFixed(2) }}</p>
+        <p
+          class="margin-bottom"
+        >${{ (summary.reduce((acc, record) => { acc += (record.net_revenue + record.unpaid_balance); return Math.floor(acc * 100) / 100 }, 0)).toFixed(2) }}</p>
       </div>
     </div>
     <p v-if="errorMessage">Whoops, something went wrong!</p>
     <p v-if="errorMessage">{{ errorMessage }}</p>
     <p v-if="!results[0] && !summary[0] && queried && !errorMessage">Could not find any matching records.</p>
+  </div>
   </div>
 </template>
 
@@ -436,7 +440,7 @@ p {
   .instructions {
     font-size: 2.25vw;
   }
-  ul {
+  .results {
     padding: 0 10px;
   }
 }
@@ -458,7 +462,7 @@ p {
   .instructions {
     font-size: 16px;
   }
-  #results {
+  .results {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
