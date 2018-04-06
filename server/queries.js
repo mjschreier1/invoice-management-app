@@ -14,30 +14,20 @@ const getDate = (date) => {
     return date.getDate();
 };
 const getSummary = (transaction) => {
-    console.log(`3. or 6. gettingSummary`)
+    console.log(`3. or 8. gettingSummary`)
     return database("summary").where("month", transaction.month).andWhere("year", transaction.year).first()
-    // console.log(transaction);
-    // console.log(summaryRecord);
-    // return summaryRecord
-        // .then(record => { summaryRecord = record; return record })
-        // .update({
-        //     gross_revenue: summaryRecord.gross_revenue - transaction.amount,
-        //     total_fees: summaryRecord.total_fees + transaction.amount - transaction.balance,
-        //     net_revenue: summaryRecord.net_revenue + transaction.balance,
-        //     unpaid_balance: summaryRecord.unpaid_balance - transaction.balance
-        // })
 };
 const setSummary = (record) => {
-    console.log(`3 1/2. setSummary function called`)
+    console.log(`5. setSummary function called`)
     summaryRecord = record;
-    console.log(`4. setSummary summaryRecord = `, summaryRecord.unpaid_balance, summaryRecord.gross_revenue, summaryRecord.total_fees, summaryRecord.net_revenue)
+    console.log(`6. setSummary summaryRecord = `, summaryRecord.unpaid_balance, summaryRecord.gross_revenue, summaryRecord.total_fees, summaryRecord.net_revenue)
 };
 const updateSummary = (transaction) => {
     console.log(`2. updateSummary transaction = `, transaction)
     getSummary(transaction)
-        .then(record => { console.log(`3 1/4. .then called with `, record); setSummary(record) })
+        .then(record => { console.log(`4. .then called with `, record); setSummary(record) })
         .then(() => {
-            console.log(`5. updatingSummary with summaryRecord`)
+            console.log(`7. updatingSummary with summaryRecord`)
             getSummary(transaction).update({
                 gross_revenue: summaryRecord.gross_revenue - transaction.amount,
                 total_fees: summaryRecord.total_fees + transaction.amount - transaction.balance,
@@ -56,12 +46,11 @@ module.exports = {
     },
 
     processPayment(transaction) {
-        console.log(transaction)
         console.log(`1. processPayment transaction = `, transaction)
         setDate();
         updateSummary(transaction)
             .then(() => {
-                console.log("7. updating transaction record")
+                console.log("9. updating transaction record")
                 return database("invoices").where("id", transaction.invoiceId)
                     .update({
                         paid: currentDate,
