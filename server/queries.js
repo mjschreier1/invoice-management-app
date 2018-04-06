@@ -13,50 +13,43 @@ const getMonth = (date) => {
 const getDate = (date) => {
     return date.getDate();
 };
-const getSummary = (transaction) => {
-    console.log(`3. or 8. gettingSummary`)
-    return database("summary").where("month", transaction.month).andWhere("year", transaction.year).first()
-};
-const setSummary = (record) => {
-    console.log(`5. setSummary function called`)
-    summaryRecord = record;
-    console.log(`6. setSummary summaryRecord = `, summaryRecord.unpaid_balance, summaryRecord.gross_revenue, summaryRecord.total_fees, summaryRecord.net_revenue)
-};
-const updateSummary = (transaction) => {
-    console.log(`2. updateSummary transaction = `, transaction)
-    getSummary(transaction)
-        .then(record => { console.log(`4. .then called with `, record); setSummary(record) })
-        .then(() => {
-            console.log(`7. updatingSummary with summaryRecord`)
-            getSummary(transaction).update({
-                gross_revenue: summaryRecord.gross_revenue - transaction.amount,
-                total_fees: summaryRecord.total_fees + transaction.amount - transaction.balance,
-                net_revenue: summaryRecord.net_revenue + transaction.balance,
-                unpaid_balance: summaryRecord.unpaid_balance - transaction.balance
-            })
-        })
-};
 
 
 module.exports = {
+    summaryRecord,
 
     readSingleInvoice(id, name) {
         return database.select("*").from("invoices").where("id", id).first()
           .then(record => new Promise((resolve, reject) => (record.name === name.toLowerCase() ? resolve(record) : reject(record))));
     },
 
-    processPayment(transaction) {
-        console.log(`1. processPayment transaction = `, transaction)
+    async processPayment(transaction) {
         setDate();
-        updateSummary(transaction)
-            .then(() => {
-                console.log("9. updating transaction record")
-                return database("invoices").where("id", transaction.invoiceId)
-                    .update({
-                        paid: currentDate,
-                        balance: 0
-                    }, "*")
-            })
+        this.updateInvoice(transaction);
+        await this.setSummaryRecord(transaction);
+        await this.updateSummary(transaction);
+    },
+
+    setSummaryRecord(transaction) {
+        return database("summary").where("month", transaction.month).andWhere("year", transaction.year).first()
+            .then(record => { summaryRecord = record })
+    },
+
+    updateSummary(transaction) {
+        return database("summary").where("month", transaction.month).andWhere("year", transaction.year).update({
+            gross_revenue: summaryRecord.gross_revenue - transaction.amount,
+            total_fees: summaryRecord.total_fees + transaction.amount - transaction.balance,
+            net_revenue: summaryRecord.net_revenue + transaction.balance,
+            unpaid_balance: summaryRecord.unpaid_balance - transaction.balance
+        })
+    },
+
+    updateInvoice(transaction) {
+        return database("invoices").where("id", transaction.invoiceId)
+            .update({
+                paid: currentDate,
+                balance: 0
+            }, "*")
     },
 
     findNextInvoiceId() {
