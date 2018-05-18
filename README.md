@@ -14,7 +14,7 @@ The Clientelements dashboard assists the contractor as they generate and send ou
 ![Clientelements Desktop View](./clientelements.png)
 
 ## Local Installation
-Fork and clone this repository. From the root of the repository, run `createdb invoice_reocrds && cd server && node app.js` and `cd ../client && npm start`. Note that you will need to have Node.js, Postgres, and psql installed on your local machine in order to run the app locally.
+Fork and clone this repository. From the root of the repository, run `npm i && createdb invoice_reocrds && cd server && node app.js` and `cd ../client && npm i && npm start`. Note that you will need to have Node.js, Postgres, and psql installed on your local machine in order to run the app locally.
 
 ## Future Features
 * Email receipts
